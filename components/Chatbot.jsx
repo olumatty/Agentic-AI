@@ -59,6 +59,43 @@ const Chatbot = () => {
         setLoading(false);
       }
     };
+    const onCardClick = async (cardText) => {
+        const newUserMessage = {role:'user' , content: cardText};
+        setMessages((prev) => [...prev, newUserMessage]);
+        setShowWelcome(false);
+
+        const aiThinking = {role:'assistant', content: 'Thinking...'};
+        setMessages((prev) => [...prev, aiThinking]);
+
+        try {
+            const response = await fetch("http://localhost:8000/mother", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ messages: [...messages, newUserMessage] }),
+            });
+
+            if (!response.ok) {
+              throw new Error("An error occurred");
+            }
+
+            const data = await response.json();
+
+            setMessages((prev) => [
+              ...prev.slice(0, -1),
+              { role: "assistant", content: data.reply },
+            ]);
+          } catch (error) {
+            console.error("Chat error:", error);
+            setMessages((prev) => [
+              ...prev.slice(0, -1),
+              { role: "assistant", content: "Sorry, something went wrong." },
+            ]);
+          } finally {
+            userRef.current?.scrollIntoView({behavior: 'smooth',});
+          }
+    };
 
     const formatTime = (date) => {
       return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -78,7 +115,7 @@ const Chatbot = () => {
          <div className="flex-grow flex flex-col">
         {showWelcome && (
           <div className="flex flex-col justify-center items-center flex-grow">
-            <HomeUI />
+            <HomeUI onCardClick={onCardClick}/>
           </div>
         )}
 
