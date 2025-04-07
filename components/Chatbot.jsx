@@ -5,15 +5,15 @@ import ReactMarkdown from "react-markdown";
 import Loading from "../components/Loading";
 import HomeUI from "./HomeUI";
 
-const Chatbot = () => {
+const Chatbot = ({showWelcome, setShowWelcome}) => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
-    const [showWelcome, setShowWelcome] = useState(true);
+    
 
     const userRef = useRef();
 
-    const handleSend = async (e) => {
+    const handleSend = async (e) => { 
       e.preventDefault();
       setShowWelcome(false);
 
@@ -111,7 +111,7 @@ const Chatbot = () => {
       }, [messages]);
 
       return (
-        <div className="flex flex-col h-screen bg-[#1E1E21]">
+        <div className="flex flex-col h-screen bg-[#1E1E21] overflow-hidden">
          <div className="flex-grow flex flex-col">
         {showWelcome && (
           <div className="flex flex-col justify-center items-center flex-grow">
@@ -120,11 +120,11 @@ const Chatbot = () => {
         )}
 
         {!showWelcome && (
-          <div className="main flex flex-col items-center w-full px-4 sm:px-8 lg:px-20 mt-4 flex-grow overflow-hidden">
+          <div className="main flex flex-col items-center w-full h-full px-4 sm:px-8 lg:px-20 mt-4 flex-grow overflow-hidden">
             <div
               className="chats overflow-y-auto scroll-smooth w-full max-w-4xl mx-auto"
               style={{
-                height: `calc(100vh - ${60}px - ${80}px - ${20}px)`, // Header, form, some extra
+                height: `calc(100vh - ${60}px - ${80}px - ${20}px)`, 
               }}
               ref={userRef}
             >
@@ -141,7 +141,7 @@ const Chatbot = () => {
                     }`}
                   >
                     <div className="bg-blue-500 text-white rounded-full px-3 py-1 text-sm">
-                      {msg.role === 'user' ? 'You' : 'AI'}
+                      {msg.role === 'user' ? 'You' : 'TA'}
                     </div>
                     {msg.content === 'Thinking...' ? (
                       <Loading />
@@ -162,7 +162,7 @@ const Chatbot = () => {
         )}
       </div>
 
-      <div className="w-full flex flex-col items-center justify-center bg-[#1E1E21] py-4 shadow-inner">
+      <div className="w-full bg-[#1E1E21] py-4 shadow-inner fixed bottom-0 left-0 right-0">
         <form
           className="p-2 flex items-center rounded-lg w-[80%] mx-auto gap-3"
           onSubmit={handleSend}
