@@ -32,7 +32,7 @@ const HomeUI = ({ onCardClick }) => {
       initial="hidden"
       animate="visible"
       variants={slideIn}
-      className="md:-mt-76 -mt-24 flex flex-col items-center"
+      className="md:-mt-60 -mt-24 flex flex-col items-center"
     >
       
       <img src={Logo} alt="Logo" className="w-10 h-10 md:w-14 md:h-14 mb-2 md:mb-4" />
