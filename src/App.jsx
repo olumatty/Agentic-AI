@@ -6,11 +6,15 @@ import {useState} from "react";
 
 const App = () => {
   const [showWelcome, setShowWelcome] = useState(true);
+  const [messages, setMessages] = useState([]);
   return (
     
-      <div className='flex flex-1 h-screen flex-col bg-[#1E1E21] transition-all duration-300'>
-        <Header setShowWelcome={setShowWelcome}/>
-        <Chatbot showWelcome={showWelcome} setShowWelcome={setShowWelcome} />
+      <div className='flex flex-1 h-screen flex-col bg-white transition-all duration-300'>
+        <Header setShowWelcome={setShowWelcome} setMessages={setMessages}/>
+        <div className="px-4 md:px-4 overflow-hidden">
+        <Chatbot showWelcome={showWelcome} setShowWelcome={setShowWelcome} setMessages={setMessages} messages={messages} />
+        </div>
+        
       </div>
   )
 }

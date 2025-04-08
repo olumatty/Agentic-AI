@@ -3,7 +3,9 @@
 
 body { 
   font-family: 'Poppins', sans-serif;
-  background-color : #1E1E21;
+  background-color : #9e9e9e;
+  margin: 0;
+  padding: 0;
   color: white;
 }
 

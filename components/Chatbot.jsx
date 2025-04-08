@@ -5,8 +5,7 @@ import ReactMarkdown from "react-markdown";
 import Loading from "../components/Loading";
 import HomeUI from "./HomeUI";
 
-const Chatbot = ({showWelcome, setShowWelcome}) => {
-    const [messages, setMessages] = useState([]);
+const Chatbot = ({showWelcome, setShowWelcome, messages, setMessages}) => {
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     
@@ -111,8 +110,8 @@ const Chatbot = ({showWelcome, setShowWelcome}) => {
       }, [messages]);
 
       return (
-        <div className="flex flex-col h-screen bg-[#1E1E21] overflow-hidden">
-         <div className="flex-grow flex flex-col">
+        <div className="flex flex-col h-screen overflow-hidden bg-gray-50 rounded-md">
+          <div className="flex-grow flex flex-col">
         {showWelcome && (
           <div className="flex flex-col justify-center items-center flex-grow">
             <HomeUI onCardClick={onCardClick}/>
@@ -162,7 +161,7 @@ const Chatbot = ({showWelcome, setShowWelcome}) => {
         )}
       </div>
 
-      <div className="w-full bg-[#1E1E21] py-4 shadow-inner fixed bottom-0 left-0 right-0">
+      <div className="w-full py-4  fixed bottom-0 left-0 right-0">
         <form
           className="p-2 flex items-center rounded-lg w-[80%] mx-auto gap-3"
           onSubmit={handleSend}
