@@ -9,9 +9,9 @@ const App = () => {
   const [messages, setMessages] = useState([]);
   return (
     
-      <div className='flex flex-1 h-screen flex-col bg-white transition-all duration-300'>
+      <div className='flex h-screen flex-col bg-white transition-all duration-300 '>
         <Header setShowWelcome={setShowWelcome} setMessages={setMessages}/>
-        <div className="px-4 md:px-4 overflow-hidden">
+        <div className="px-4 md:px-4 pb-4 flex-1 flex flex-col border-b-lg overflow-hidden">
         <Chatbot showWelcome={showWelcome} setShowWelcome={setShowWelcome} setMessages={setMessages} messages={messages} />
         </div>
         

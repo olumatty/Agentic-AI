@@ -110,7 +110,7 @@ const Chatbot = ({showWelcome, setShowWelcome, messages, setMessages}) => {
       }, [messages]);
 
       return (
-        <div className="flex flex-col h-screen overflow-hidden bg-gray-50 rounded-md">
+        <div className="flex flex-col h-screen bg-gray-100 rounded-lg rounded-b-lg">
           <div className="flex-grow flex flex-col">
         {showWelcome && (
           <div className="flex flex-col justify-center items-center flex-grow">
@@ -161,28 +161,34 @@ const Chatbot = ({showWelcome, setShowWelcome, messages, setMessages}) => {
         )}
       </div>
 
-      <div className="w-full py-4  fixed bottom-0 left-0 right-0">
-        <form
-          className="p-2 flex items-center rounded-lg w-[80%] mx-auto gap-3"
-          onSubmit={handleSend}
-        >
-          <input
-            type="text"
-            className="flex-1 h-16 px-3 sm:px-6 text-xs sm:text-base border border-gray-300 rounded-lg
-            focus:ring-2 focus:ring-gray-400 outline-none placeholder:text-[12px] sm:placeholder:text-[14px]"
-            placeholder="Send a message"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-          />
-          <button
-            type="submit"
-            className="py-2 px-6 h-16 sm:py-3 sm:px-6 bg-gray-700 text-white rounded-lg shadow outline-none
-            transition-transform transform hover:scale-105 hover:bg-gray-600 flex items-center justify-center"
+      <div className="w-full py-4 fixed bottom-0  md:left-0 md:right-0 mb-6 ">
+          <form
+            className="p-2 pl-4 md:pl-0 flex tems-center rounded-lg w-full md:w-[80%] mx-auto"
+            onSubmit={handleSend}
           >
-            <BsSend className="w-4 h-4 sm:w-6 sm:h-6" />
-          </button>
-        </form>
-      </div>
+            <div className="relative w-full">
+              <input
+                type="text"
+                className="w-full h-16 pr-16 sm:pr-20 pl-3 sm:pl-6 bg-white text-gray-900 text-xs sm:text-base border border-gray-200 rounded-lg
+                outline-none placeholder:text-[12px] sm:placeholder:text-[14px]"
+                placeholder="Send a message"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+              />
+              <button
+                type="submit"
+                className="absolute right-12 top-1/2 -translate-y-1/2 py-2.5 px-4 mr-4 bg-sky-400 text-white rounded-lg text-[14px] shadow outline-none
+                transition-transform transform hover:scale-105 hover:bg-sky-500 flex items-center justify-center"
+              >
+                <div className="flex items-center gap-2">
+                <BsSend className="w-4 h-4 " /> 
+                <p className="font-medium hidden md:block">Send</p>
+                </div>
+
+              </button>
+            </div>
+          </form>
+        </div>
     </div>
       );
 }
