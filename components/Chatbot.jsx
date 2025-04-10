@@ -18,6 +18,9 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
   const inputBarRef = useRef(null);
   const [inputBarHeight, setInputBarHeight] = useState(0);
 
+  let userId = localStorage.getItem('userId');
+  let sessionId = localStorage.getItem('sessionId');
+
   useEffect(() => {
     if (inputBarRef.current) {
       setInputBarHeight(inputBarRef.current.offsetHeight);
@@ -41,13 +44,24 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
     try {
       const response = await fetch("http://localhost:8000/mother", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: 
+        { "Content-Type": "application/json", 'user-id': userId, 'session-id': sessionId },
         body: JSON.stringify({ messages: [...messages, userMessage] }),
       });
 
       if (!response.ok) throw new Error("An error occurred");
 
       const data = await response.json();
+
+      if (data.userId) {
+        userId = data.userId;
+        localStorage.setItem('userId', userId);
+      }
+      
+      if (data.sessionId) {
+        sessionId = data.sessionId;
+        localStorage.setItem('sessionId', sessionId);
+      }
 
       setMessages((prev) => [
         ...prev.slice(0, -1),
@@ -75,13 +89,24 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
     try {
       const response = await fetch("http://localhost:8000/mother", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", 'user-id': userId, 'session-id': sessionId },
         body: JSON.stringify({ messages: [...messages, newUserMessage] }),
       });
 
       if (!response.ok) throw new Error("An error occurred");
 
       const data = await response.json();
+
+
+      if (data.userId) {
+        userId = data.userId;
+        localStorage.setItem('userId', userId);
+      }
+      
+      if (data.sessionId) {
+        sessionId = data.sessionId;
+        localStorage.setItem('sessionId', sessionId);
+      }
 
       setMessages((prev) => [
         ...prev.slice(0, -1),
