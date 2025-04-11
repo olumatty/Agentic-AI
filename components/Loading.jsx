@@ -1,5 +1,4 @@
 import React from 'react'
-import  Logo from "../src/assets/star-inside-circle-svgrepo-com.svg"
 
 const Loading = () => {
   return (

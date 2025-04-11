@@ -79,6 +79,44 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
 
     let userId = localStorage.getItem('userId');
     let sessionId = localStorage.getItem('sessionId');
+    let sessionCreatedAt = localStorage.getItem('sessionCreatedAt');
+
+    if(sessionCreatedAt){
+      const sessionAge = (new Date() - new Date(sessionCreatedAt)) / 1000;
+      const sessionTimeout = 60 * 60; // 1 hour in seconds
+
+      if (sessionAge > sessionTimeout) {
+        console.error("Session has expired. Please refresh or start a new session.");
+        setMessages(prev => [
+          ...prev.slice(0, -1),
+          { 
+            role: "assistant", 
+            content: "Your session has expired. Please refresh and start a new session.",
+            timestamp: new Date().toISOString(),
+            isError: true
+          },
+        ]);
+        setLoading(false);
+        return; // Prevent message sending if the session is expired
+      }
+    }
+
+    // If sessionId exists, proceed
+    if (!sessionId) {
+      console.error("No session ID found. Please start a new session.");
+      setMessages(prev => [
+        ...prev.slice(0, -1),
+        { 
+          role: "assistant", 
+          content: "Sorry, session not found. Please refresh and start a new session.",
+          timestamp: new Date().toISOString(),
+          isError: true
+        },
+      ]);
+      setLoading(false);
+      return; // Prevent the message from being sent if no session exists
+    }
+
 
     try {
       const response = await fetch(`${API_URL}/mother`, {
@@ -106,6 +144,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
       
       if (data.sessionId) {
         localStorage.setItem('sessionId', data.sessionId);
+        localStorage.setItem('sessionCreatedAt', new Date().toISOString());
       }
 
       // Replace thinking message with real response
@@ -221,6 +260,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
           <div className="flex flex-col justify-center items-center flex-grow px-4 sm:px-6">
             <HomeUI onCardClick={onCardClick} />
           </div>
+
         ) : (
           <div className="flex flex-col flex-grow min-h-0 px-2 sm:px-4 md:px-10 lg:px-20">
             <div
@@ -228,11 +268,13 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
               className="flex-1 min-h-0 overflow-y-auto scroll-smooth w-full max-w-5xl mx-auto py-4 pr-2 pt-14"
               style={{ maxHeight: `calc(100vh - ${inputBarHeight}px - 32px)` }}
             >
+
               {messages.map((msg, index) => (
                 <div
                   key={index}
                   className={`py-2 px-2 flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
                 >
+
                   {msg.role === "user" ? (
                     <div ref={userRef} className="flex flex-col items-end -mr-2 max-w-[90%] mb-2">
                       <div className="bg-gray-900 text-white py-2 px-4 rounded-xl rounded-tr-none">
@@ -242,6 +284,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
                         {formatTime(msg.timestamp)}
                       </p>
                     </div>
+
                   ) : (
                     <div className="flex flex-row gap-2 sm:gap-3 max-w-[95%] mb-2">
                       <div className="mt-0 flex-shrink-0">

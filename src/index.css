@@ -26,28 +26,8 @@ input {
   width: calc(100% - 3rem);
 }
 
-
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-    
-  }
-}
-.animate-bounce {
-  animation: bounce 1s ease-in-out infinite;
-}
 .content {
   flex-grow: 1;
   padding: 1rem;
   width: calc(100% - 16rem);
-}
-
-.bg{
-  background: linear-gradient(to right, #1d7efd, #8f6fff);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
