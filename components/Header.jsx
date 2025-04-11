@@ -39,7 +39,7 @@ const Header = ({startNewChat}) => {
       </div>
 
       <div className='flex items-center'>
-        <button onClick={handleSignup} className='flex items-center border cursor-pointer border-gray-300 py-2 px-5 rounded-xl'>
+        <button onClick={handleSignup} className='flex items-center border cursor-pointer hover:bg-gray-100 border-gray-300 py-2 px-5 rounded-xl'>
         <h1 className='font-medium text-[13px] text-center text-gray-900'>Sign up</h1>
         </button>
       </div>
