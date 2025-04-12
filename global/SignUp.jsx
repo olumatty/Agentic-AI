@@ -34,35 +34,45 @@ const SignUp = () => {
             setError('Please enter a password.');
             return;
         }
-        
+
         setLoading(true);
 
         try {
-            const response = await axios.post('https://api.example.com/signup', {
+            const response = await axios.post('http://localhost:8000/api/v1/auth/signup', {
                 email,
                 password,
                 username
             });
 
+            localStorage.setItem('userId', response.data.userId);
+
             if (response.status === 200) {
                 // Handle successful signup, e.g., store token, redirect, etc.
                 console.log("Signup successful:", response.data);
-                navigate("/");
+                navigate("/login");
             }
 
         }catch (err) {
-            if (err.response) {
-              if (err.response.status === 400) {
-                setError("Invalid email or password.");
-              } else {
-                setError("An error occurred: " + err.response.data.message || "Please try again later.");
+          if (err.response) {
+              // Handle specific error codes from your backend
+              if (err.response.status === 400 && err.response.data.message.includes('Username already exists')) {
+                  setError("Username is already taken. Please choose another.");
               }
-            } else {
+              else if (err.response.status === 400 && err.response.data.message.includes('Email already exists')) {
+                  setError("Email is already registered. Please use another email or login.");
+              }
+              else {
+                  setError(err.response.data.message || "Registration failed. Please try again.");
+              }
+          } else {
               setError("Network error. Please check your connection.");
-            }
-            console.error("Signup error:", err);
           }
+          console.error("Signup error:", err);
+        } finally {
+            setLoading(false);
         }
+    };
+
   return (
     <div className='p-4 bg-white'>
         <div className='flex items-center gap-2'>
@@ -100,7 +110,7 @@ const SignUp = () => {
                             placeholder='Enter your email'
                         />
                     </div>
-                    
+
                     <div>
                         <label htmlFor='password' className='block text-gray-700 text-sm font-medium mb-2'>Password</label>
                         <PasswordInput
@@ -130,4 +140,4 @@ const SignUp = () => {
   )
 }
 
-export default SignUp
+export default SignUp;

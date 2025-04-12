@@ -5,12 +5,14 @@ import { validateEmail } from '../util/Helper'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import Logo from "../src/assets/star-inside-circle-svgrepo-com.svg";
+import { useAuth } from '../context/authContext.jsx';
 
 const SignIn = () => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const navigate = useNavigate()
+    const { login } = useAuth(); 
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -27,30 +29,34 @@ const SignIn = () => {
         setError('');
 
         try {
-            const response = await axios.post('https://api.example.com/login', {
+            const response = await axios.post('http://localhost:8000/api/v1/auth/login', {
                 email,
                 password
             });
 
-            if (response.status === 200) {
-                // Handle successful login, e.g., store token, redirect, etc.
+            if (response.status === 200 && response.data.userId) {
+                localStorage.setItem('userId', response.data.userId);
+                login(response.data.userId); // Call the login function from AuthContext
                 console.log("Login successful:", response.data);
                 navigate("/");
+            } else if (response.status === 200) {
+                console.log("Login successful, but no userId in response:", response.data);
+                // Handle case where login is successful but userId is missing
             }
 
-        }catch (err) {
+        } catch (err) {
             if (err.response) {
-              if (err.response.status === 400) {
-                setError("Invalid email or password.");
-              } else {
-                setError("An error occurred: " + err.response.data.message || "Please try again later.");
-              }
+                if (err.response.status === 400) {
+                    setError("Invalid email or password.");
+                } else {
+                    setError("An error occurred: " + (err.response.data.message || "Please try again later."));
+                }
             } else {
-              setError("Network error. Please check your connection.");
+                setError("Network error. Please check your connection.");
             }
             console.error("Login error:", err);
-          }
         }
+    };
   return (
     <div className='p-4 bg-white'>
         <div className='flex items-center gap-2'>

@@ -119,7 +119,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
 
 
     try {
-      const response = await fetch(`${API_URL}/mother`, {
+      const response = await fetch(`${API_URL}/api/v1/mother`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -337,6 +337,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
               <div className="flex items-center gap-2">
                 <BsSend className="w-4 h-4" />
                 <p className="font-medium hidden md:block">{loading ? 'Sending...' : 'Send'}</p>
+                //TODO: Change the the send icon to an arrowupicon
               </div>
             </button>
           </div>
