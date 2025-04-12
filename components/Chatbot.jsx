@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import React from "react";
-import { BsSend } from "react-icons/bs";
+import { IoIosArrowRoundUp } from "react-icons/io";
 import ReactMarkdown from "react-markdown";
 import Loading from "../components/Loading";
 import HomeUI from "./HomeUI";
@@ -82,10 +82,11 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
     setMessages(prev => [...prev, thinkingMessage]);
 
     const currentUserId = user?.id || userIdFromUrl || '';
-    let sessionId = localStorage.getItem('sessionId');
+    const sessionIdFromStorage = localStorage.getItem('sessionId');
     let sessionCreatedAt = localStorage.getItem('sessionCreatedAt');
 
-    if(sessionCreatedAt){
+    // Session expiration check
+    if (sessionCreatedAt) {
       const sessionAge = (new Date() - new Date(sessionCreatedAt)) / 1000;
       const sessionTimeout = 60 * 60; // 1 hour in seconds
 
@@ -105,31 +106,18 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
       }
     }
 
-    // If sessionId exists, proceed
-    if (!sessionId) {
-      console.error("No session ID found. Please start a new session.");
-      setMessages(prev => [
-        ...prev.slice(0, -1),
-        {
-          role: "assistant",
-          content: "Sorry, session not found. Please refresh and start a new session.",
-          timestamp: new Date().toISOString(),
-          isError: true
-        },
-      ]);
-      setLoading(false);
-      return; // Prevent the message from being sent if no session exists
+    const headers = {
+      "Content-Type": "application/json",
+      'user-id': currentUserId,
+    };
+    if (sessionIdFromStorage) {
+      headers['session-id'] = sessionIdFromStorage;
     }
-
 
     try {
       const response = await fetch(`${API_URL}/api/v1/mother`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          'user-id': currentUserId,
-          'session-id': sessionId || ''
-        },
+        headers: headers,
         body: JSON.stringify({
           messages: [...messages.filter(m => !m.isLoading), userMessage]
         }),
@@ -141,26 +129,23 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
 
       const data = await response.json();
 
-      // Store session info
-      if (data.userId) {
-        localStorage.setItem('userId', data.userId);
-      }
-
-      if (data.sessionId) {
+      // Store sessionId in localStorage if received and not already present
+      if (data.sessionId && !sessionIdFromStorage) {
         localStorage.setItem('sessionId', data.sessionId);
         localStorage.setItem('sessionCreatedAt', new Date().toISOString());
       }
 
       // Replace thinking message with real response
-      setMessages(prev => [
-        ...prev.slice(0, -1),
-        {
+      setMessages(prev => {
+        const newMessages = [...prev.slice(0, -1), {
           role: "assistant",
           content: data.reply,
           timestamp: new Date().toISOString(),
           toolResults: data.toolResults
-        },
-      ]);
+        }];
+        return newMessages;
+      });
+
     } catch (error) {
       console.error("Chat error:", error);
       setMessages(prev => [
@@ -329,19 +314,18 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
               autoFocus
             />
             <button
-              type="submit"
-              className={`absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 py-2.5 px-4
-                ${loading ? 'bg-gray-400' : 'bg-sky-400 hover:bg-sky-500'}
-                text-white rounded-lg text-sm shadow outline-none transition-transform transform
-                hover:scale-105 flex items-center justify-center`}
-              disabled={loading || input.trim() === ""}
-            >
-              <div className="flex items-center gap-2">
-                <BsSend className="w-4 h-4" />
-                <p className="font-medium hidden md:block">{loading ? 'Sending...' : 'Send'}</p>
-                //TODO: Change the the send icon to an arrowupicon
-              </div>
-            </button>
+            type="submit"
+            className={`absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 py-2 px-2
+              ${loading ? 'bg-gray-400' : 'bg-sky-400 hover:bg-sky-500'}
+              text-white rounded-lg text-sm shadow outline-none transition-all duration-200 transform
+              hover:scale-105 flex items-center justify-center
+              ${input.trim() === '' ? 'opacity-0 pointer-events-none scale-90' : 'opacity-100 scale-100'}`}
+            disabled={loading || input.trim() === ""}
+          >
+            <div className="flex items-center gap-1">
+              <IoIosArrowRoundUp className="w-7 h-7 font-bold" />
+            </div>
+          </button>
           </div>
         </form>
       </div>
