@@ -5,15 +5,19 @@ import ReactMarkdown from "react-markdown";
 import Loading from "../components/Loading";
 import HomeUI from "./HomeUI";
 import Logo from "../src/assets/star-inside-circle-svgrepo-com.svg";
+import {useAuth} from '../context/authContext.jsx'; 
+import { useParams } from 'react-router-dom'; // Import useParams
 
 const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { user } = useAuth(); // Get user from AuthContext
+  const { userId: userIdFromUrl } = useParams(); // Get userId from URL
 
-  const userRef = useRef(); 
+  const userRef = useRef();
   const messagesEndRef = useRef();
-  const chatContainerRef = useRef(); 
+  const chatContainerRef = useRef();
 
   // Get the height of the input bar dynamically
   const inputBarRef = useRef(null);
@@ -32,7 +36,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
     const fetchChatHistory = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_URL}/get-chat-history`);
+        const response = await fetch(`${API_URL}/get-chat-history?userId=${user?.id || userIdFromUrl || ''}`); // Send userId for history
         if (response.ok) {
           const history = await response.json();
           // Make sure all messages have timestamps
@@ -53,31 +57,31 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
         setLoading(false);
       }
     };
-    
+
     fetchChatHistory();
-  }, [setMessages, setShowWelcome]);
+  }, [setMessages, setShowWelcome, user?.id, userIdFromUrl, API_URL]); // Depend on user?.id and userIdFromUrl
 
   const sendMessage = async (messageContent) => {
-    const userMessage = { 
-      role: "user", 
-      content: messageContent, 
-      timestamp: new Date().toISOString() 
+    const userMessage = {
+      role: "user",
+      content: messageContent,
+      timestamp: new Date().toISOString()
     };
 
     setMessages(prev => [...prev, userMessage]);
     setShowWelcome(false);
     setLoading(true);
-    
+
     // Show thinking message
-    const thinkingMessage = { 
-      role: "assistant", 
-      content: "Thinking...", 
+    const thinkingMessage = {
+      role: "assistant",
+      content: "Thinking...",
       timestamp: new Date().toISOString(),
       isLoading: true
     };
     setMessages(prev => [...prev, thinkingMessage]);
 
-    let userId = localStorage.getItem('userId');
+    const currentUserId = user?.id || userIdFromUrl || '';
     let sessionId = localStorage.getItem('sessionId');
     let sessionCreatedAt = localStorage.getItem('sessionCreatedAt');
 
@@ -89,8 +93,8 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
         console.error("Session has expired. Please refresh or start a new session.");
         setMessages(prev => [
           ...prev.slice(0, -1),
-          { 
-            role: "assistant", 
+          {
+            role: "assistant",
             content: "Your session has expired. Please refresh and start a new session.",
             timestamp: new Date().toISOString(),
             isError: true
@@ -106,8 +110,8 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
       console.error("No session ID found. Please start a new session.");
       setMessages(prev => [
         ...prev.slice(0, -1),
-        { 
-          role: "assistant", 
+        {
+          role: "assistant",
           content: "Sorry, session not found. Please refresh and start a new session.",
           timestamp: new Date().toISOString(),
           isError: true
@@ -121,13 +125,13 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
     try {
       const response = await fetch(`${API_URL}/api/v1/mother`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          'user-id': userId || '', 
-          'session-id': sessionId || '' 
+          'user-id': currentUserId,
+          'session-id': sessionId || ''
         },
-        body: JSON.stringify({ 
-          messages: [...messages.filter(m => !m.isLoading), userMessage] 
+        body: JSON.stringify({
+          messages: [...messages.filter(m => !m.isLoading), userMessage]
         }),
       });
 
@@ -141,7 +145,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
       if (data.userId) {
         localStorage.setItem('userId', data.userId);
       }
-      
+
       if (data.sessionId) {
         localStorage.setItem('sessionId', data.sessionId);
         localStorage.setItem('sessionCreatedAt', new Date().toISOString());
@@ -150,8 +154,8 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
       // Replace thinking message with real response
       setMessages(prev => [
         ...prev.slice(0, -1),
-        { 
-          role: "assistant", 
+        {
+          role: "assistant",
           content: data.reply,
           timestamp: new Date().toISOString(),
           toolResults: data.toolResults
@@ -161,8 +165,8 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
       console.error("Chat error:", error);
       setMessages(prev => [
         ...prev.slice(0, -1),
-        { 
-          role: "assistant", 
+        {
+          role: "assistant",
           content: "Sorry, something went wrong. Please try again later.",
           timestamp: new Date().toISOString(),
           isError: true
@@ -177,7 +181,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
   const handleSend = async (e) => {
     e.preventDefault();
     if (input.trim() === "" || loading) return;
-    
+
     const messageText = input.trim();
     setInput("");
     await sendMessage(messageText);
@@ -216,16 +220,15 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
     if (msg.isLoading || msg.content === "Thinking...") {
       return <Loading />;
     }
-    
+
     if (msg.isError) {
       return <div className="text-red-500">{msg.content}</div>;
     }
-    
+
     return (
       <div className="text-gray-800 p-1 sm:p-2 prose prose-sm">
         <ReactMarkdown>{msg.content}</ReactMarkdown>
-        
-        {/* If there are tool results, we could render them here */}
+
         {msg.toolResults && (
           <div className="mt-2 pt-2 border-t border-gray-200">
             <p className="text-xs text-gray-500">Information sources used:</p>
@@ -242,11 +245,10 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 rounded-lg">
-      {/* Show error banner if there's an error */}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
           <span className="block sm:inline">{error}</span>
-          <button 
+          <button
             className="absolute top-0 bottom-0 right-0 px-4 py-3"
             onClick={() => setError(null)}
           >
@@ -254,7 +256,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
           </button>
         </div>
       )}
-      
+
       <div className="flex-grow flex flex-col min-h-0">
         {showWelcome ? (
           <div className="flex flex-col justify-center items-center flex-grow px-4 sm:px-6">
@@ -328,9 +330,9 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
             />
             <button
               type="submit"
-              className={`absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 py-2.5 px-4 
-                ${loading ? 'bg-gray-400' : 'bg-sky-400 hover:bg-sky-500'} 
-                text-white rounded-lg text-sm shadow outline-none transition-transform transform 
+              className={`absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 py-2.5 px-4
+                ${loading ? 'bg-gray-400' : 'bg-sky-400 hover:bg-sky-500'}
+                text-white rounded-lg text-sm shadow outline-none transition-transform transform
                 hover:scale-105 flex items-center justify-center`}
               disabled={loading || input.trim() === ""}
             >

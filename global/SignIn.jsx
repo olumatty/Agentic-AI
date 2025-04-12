@@ -36,12 +36,12 @@ const SignIn = () => {
 
             if (response.status === 200 && response.data.userId) {
                 localStorage.setItem('userId', response.data.userId);
-                login(response.data.userId); // Call the login function from AuthContext
+                login(response.data.userId);
                 console.log("Login successful:", response.data);
-                navigate("/");
+                navigate(`/${response.data.userId}`); // Attach userId to the root URL
             } else if (response.status === 200) {
                 console.log("Login successful, but no userId in response:", response.data);
-                // Handle case where login is successful but userId is missing
+                navigate("/"); // Or some default route
             }
 
         } catch (err) {

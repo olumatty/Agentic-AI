@@ -7,6 +7,7 @@ import SignUp from "../global/SignUp";
 const routes = (
   <Router>
     <Routes>
+      <Route path="/:userId" element={<AgentPage />} />
       <Route path="/" element={<AgentPage />} />
       <Route path="/signin" element={<SignIn />} />
       <Route path="/signup" element={<SignUp />} />
