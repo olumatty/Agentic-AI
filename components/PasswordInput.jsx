@@ -12,7 +12,7 @@ const PasswordInput = ({value, onChange, placeholder}) => {
     <div className={`flex items-center bg-white border border-gray-300 px-4 py-3 rounded-md focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition duration-200 `}>
     <input
         type={showPassword ? 'text':'password'}
-        className='w-full text-sm bg-transparent placeholder:text-gray-400 text-gray-900 border-none outline-none mr-18'
+        className='w-full text-sm bg-transparent placeholder:text-[12px] placeholder:text-gray-400 text-gray-900 border-none outline-none mr-18'
         value={value}
         onChange={onChange}
         placeholder={placeholder || 'Password'}

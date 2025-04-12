@@ -72,7 +72,7 @@ const SignIn = () => {
                             name='email'
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className='w-full text-sm bg-white border border-gray-300 placeholder:text-gray-400 text-gray-900 px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500'
+                            className='w-full text-sm bg-white border border-gray-300 placeholder:text-[12px] placeholder:text-gray-400 text-gray-900 px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500'
                             placeholder='Enter your email'
                         />
                     </div>
