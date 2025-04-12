@@ -328,7 +328,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
             />
             <button
               type="submit"
-              className={`absolute right-14 sm:right-14 top-1/2 -translate-y-1/2 py-2.5 px-4 
+              className={`absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 py-2.5 px-4 
                 ${loading ? 'bg-gray-400' : 'bg-sky-400 hover:bg-sky-500'} 
                 text-white rounded-lg text-sm shadow outline-none transition-transform transform 
                 hover:scale-105 flex items-center justify-center`}

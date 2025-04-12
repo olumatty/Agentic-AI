@@ -22,9 +22,7 @@ body {
   border-radius: 8px;
 }
 
-input {
-  width: calc(100% - 3rem);
-}
+
 
 .content {
   flex-grow: 1;
