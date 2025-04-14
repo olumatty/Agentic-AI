@@ -2,6 +2,9 @@ import React, { useEffect } from 'react';
 import { IoIosClose } from "react-icons/io";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useState, } from 'react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 const Modal = ({ onClose }) => {
     const [apiKey, setApiKey] = useState('');
@@ -26,6 +29,7 @@ const Modal = ({ onClose }) => {
             return;
         }
         localStorage.setItem('apiKey', apiKey);
+        toast.success('API key saved successfully!');
         setIsSaved(true);
     };
 
