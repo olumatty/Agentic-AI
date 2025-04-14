@@ -3,6 +3,9 @@ import {BrowserRouter as Router, Routes, Route} from "react-router-dom";
 import AgentPage from "../global/AgentPage";
 import SignIn from "../global/SignIn";
 import SignUp from "../global/SignUp";
+import Modal from '../components/modal';
+
+
 
 const routes = (
   <Router>
@@ -11,6 +14,8 @@ const routes = (
       <Route path="/" element={<AgentPage />} />
       <Route path="/signin" element={<SignIn />} />
       <Route path="/signup" element={<SignUp />} />
+      <Route path="/modal" element={<Modal />} />
+      
     </Routes>
   </Router>
 )

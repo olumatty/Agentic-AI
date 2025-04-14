@@ -316,11 +316,11 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
             <button
             type="submit"
             className={`absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 py-2 px-2
-              ${loading ? 'bg-gray-400' : 'bg-sky-400 hover:bg-sky-500'}
-              text-white rounded-lg text-sm shadow outline-none transition-all duration-200 transform
-              hover:scale-105 flex items-center justify-center
-              ${input.trim() === '' ? 'opacity-0 pointer-events-none scale-90' : 'opacity-100 scale-100'}`}
-            disabled={loading || input.trim() === ""}
+              text-white rounded-lg text-sm shadow outline-none transition-all duration-200 transform flex items-center justify-center
+              ${loading ? 'bg-gray-400 cursor-not-allowed' : input.trim() === ''
+                ? 'bg-sky-300 opacity-90 cursor-default scale-95'
+                : 'bg-sky-400 hover:bg-sky-500 hover:scale-105 opacity-100 scale-100'}`}
+            disabled={loading} 
           >
             <div className="flex items-center gap-1">
               <IoIosArrowRoundUp className="w-7 h-7 font-bold" />

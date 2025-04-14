@@ -8,10 +8,6 @@ const AgentPage = () => {
     const [messages, setMessages] = useState([]);
   
     const startNewChat = () => {
-      console.log("Starting a new chat session from App.jsx...");
-      localStorage.removeItem('userId');
-      localStorage.removeItem('sessionId');
-      localStorage.removeItem('sessionCreatedAt');
       setMessages([]);
       setShowWelcome(true);
     };

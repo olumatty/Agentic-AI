@@ -2,11 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import Logo from "../src/assets/star-inside-circle-svgrepo-com.svg";
 import { BiMessageRoundedAdd } from "react-icons/bi";
 import { useNavigate } from "react-router";
-import { IoIosMenu, IoIosClose } from "react-icons/io";
+import { IoIosMenu, IoIosClose} from "react-icons/io";
+import { IoSettingsOutline } from "react-icons/io5";
 import { useAuth } from '../context/authContext.jsx';
+import Modal from './modal.jsx';
 
 const Header = ({ startNewChat }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const { isAuthenticated, logout } = useAuth();
   const menuRef = useRef(null);
   const navigate = useNavigate();
@@ -112,12 +115,22 @@ const Header = ({ startNewChat }) => {
             </div>
           </>
         ) : (
-          <button 
+          <div className='flex items-center gap-2'>
+            <button 
             onClick={handleLogout} 
             className="flex items-center border cursor-pointer hover:bg-gray-200 border-gray-300 py-2 px-5 rounded-xl transition-colors"
           >
             <h1 className="font-medium text-[13px] text-center text-gray-900">Logout</h1>
           </button>
+            <div>
+            <button  className="flex items-center  cursor-pointer  py-1.5 px-5 rounded-xl transition-colors">
+              <IoSettingsOutline size={24} onClick={() => setShowModal(!showModal)} className='text-gray-500 hover:text-gray-700 transition-colors' />
+            </button>
+            {showModal && <Modal onClose={() => setShowModal(false)} />}
+            </div>
+
+          </div>
+          
         )}
       </div>
     </div>
