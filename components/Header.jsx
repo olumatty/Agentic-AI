@@ -52,7 +52,7 @@ const Header = ({ startNewChat }) => {
   }, [isMenuOpen]);
 
   return (
-    <div ref={menuRef}  className="flex p-4 items-center justify-between ">
+    <div ref={menuRef}  className="flex px-4 py-2.5 items-center justify-between ">
       <div className="flex items-center gap-2">
         <button className="flex items-center gap-1 border cursor-pointer border-gray-300 py-2 px-3 rounded-xl">
           <img src={Logo} alt="Logo" className="w-5 h-5" />

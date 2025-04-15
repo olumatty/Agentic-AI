@@ -4,6 +4,7 @@ import PasswordInput from '../components/PasswordInput'
 import { validateEmail } from '../util/Helper'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import { ToastContainer, toast } from 'react-toastify';
 import Logo from "../src/assets/star-inside-circle-svgrepo-com.svg";
 
 
@@ -39,19 +40,19 @@ const SignUp = () => {
 
         try {
             const response = await axios.post('http://localhost:8000/api/v1/auth/signup', {
+                username,
                 email,
-                password,
-                username
+                password
             });
-
+            console.log('SIGNUP RESPONSE:', response.data);
+        
             localStorage.setItem('userId', response.data.userId);
-
-            if (response.status === 200) {
-                // Handle successful signup, e.g., store token, redirect, etc.
+        
+            if (response.status === 201) {
                 console.log("Signup successful:", response.data);
-                navigate("/login");
+                toast.success('Signup successful! Please log in.');
+                navigate("/signin");
             }
-
         }catch (err) {
           if (err.response) {
               // Handle specific error codes from your backend
@@ -87,7 +88,7 @@ const SignUp = () => {
                 <h1 className='text-2xl font-semibold text-gray-800 mb-6 text-center'>Sign up</h1>
                 <form onSubmit={handleSignup} className='space-y-4'>
 
-                <div>
+                    <div>
                         <label htmlFor='Text' className='block text-gray-700 text-sm font-medium mb-2'>Username</label>
                         <input
                             type='text'
@@ -96,7 +97,7 @@ const SignUp = () => {
                             className='w-full text-sm bg-white border border-gray-300 placeholder:text-[12px] placeholder:text-gray-400 text-gray-900 px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500'
                             placeholder='Enter your username'
                         />
-                  </div>
+                    </div>
 
                     <div>
                         <label htmlFor='email' className='block text-gray-700 text-sm font-medium mb-2'>Email</label>

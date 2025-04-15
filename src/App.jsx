@@ -6,6 +6,7 @@ import SignUp from "../global/SignUp";
 import Modal from '../components/modal';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Sidebar from '../components/sidebar';
 
 
 
@@ -17,6 +18,7 @@ const routes = (
       <Route path="/signin" element={<SignIn />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/modal" element={<Modal />} />
+      <Route path='/sidebar' element={<Sidebar />} />
     </Routes>
   </Router>
 )
