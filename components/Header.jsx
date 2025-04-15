@@ -25,29 +25,34 @@ const Header = ({ startNewChat }) => {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('sessionId');
+    localStorage.removeItem('chatId');
+    localStorage.removeItem('sessionCreatedAt');
     logout();
     setIsMenuOpen(false);
   };
 
   // Close menu on outside click
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutsideMenu = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setIsMenuOpen(false);
       }
     };
 
     if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutsideMenu);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutsideMenu);
     };
   }, [isMenuOpen]);
 
   return (
-    <div className="flex p-4 items-center justify-between">
+    <div ref={menuRef}  className="flex p-4 items-center justify-between ">
       <div className="flex items-center gap-2">
         <button className="flex items-center gap-1 border cursor-pointer border-gray-300 py-2 px-3 rounded-xl">
           <img src={Logo} alt="Logo" className="w-5 h-5" />
@@ -126,7 +131,11 @@ const Header = ({ startNewChat }) => {
             <button  className="flex items-center  cursor-pointer  py-1.5 px-5 rounded-xl transition-colors">
               <IoSettingsOutline size={24} onClick={() => setShowModal(!showModal)} className='text-gray-500 hover:text-gray-700 transition-colors' />
             </button>
-            {showModal && <Modal onClose={() => setShowModal(false)} />}
+            {showModal && 
+            <Modal onClose={() => setShowModal(false)} 
+                setShowModal={setShowModal}
+
+             />}
             </div>
 
           </div>

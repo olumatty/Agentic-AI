@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion as FramerMotion  } from "framer-motion"
-import { LuMessageCircle, LuPlane, LuHotel, LuStar } from "react-icons/lu";
+import { LuMessageCircle, LuPlane, LuHotel, } from "react-icons/lu";
 import Logo from "../src/assets/star-inside-circle-svgrepo-com.svg";
 
 const HomeUI = ({ onCardClick }) => {
