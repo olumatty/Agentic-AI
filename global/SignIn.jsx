@@ -32,18 +32,26 @@ const SignIn = () => {
             const response = await axios.post('http://localhost:8000/api/v1/auth/login', {
                 email,
                 password
+            },{
+                withCredentials: true,
             });
-
-            if (response.status === 200 && response.data.userId) {
+        
+            if (response.status === 200 && response.data.userId && response.data.chatId) {
                 localStorage.setItem('userId', response.data.userId);
+                localStorage.setItem('chatId', response.data.chatId); // Store the chatId
                 login(response.data.userId);
                 console.log("Login successful:", response.data);
-                navigate(`/${response.data.userId}`); // Attach userId to the root URL
+                navigate(`/chat/${response.data.chatId}`); // Navigate to the /chat/:chatId route
+            } else if (response.status === 200 && response.data.userId) {
+                localStorage.setItem('userId', response.data.userId);
+                login(response.data.userId);
+                console.log("Login successful, no chatId in response (check backend):", response.data);
+                navigate(`/user/${response.data.userId}`); // Or a different user-specific route if needed
             } else if (response.status === 200) {
                 console.log("Login successful, but no userId in response:", response.data);
                 navigate("/"); // Or some default route
             }
-
+        
         } catch (err) {
             if (err.response) {
                 if (err.response.status === 400) {
@@ -55,7 +63,7 @@ const SignIn = () => {
                 setError("Network error. Please check your connection.");
             }
             console.error("Login error:", err);
-        }
+        }        
     };
   return (
     <div className='p-4 bg-white'>

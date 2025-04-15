@@ -4,7 +4,7 @@ import AgentPage from "../global/AgentPage";
 import SignIn from "../global/SignIn";
 import SignUp from "../global/SignUp";
 import Modal from '../components/modal';
-import { ToastContainer} from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 
@@ -12,7 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 const routes = (
   <Router>
     <Routes>
-      <Route path="/:userId" element={<AgentPage />} />
+      <Route path="/chat/:chatId" element={<AgentPage />} />
       <Route path="/" element={<AgentPage />} />
       <Route path="/signin" element={<SignIn />} />
       <Route path="/signup" element={<SignUp />} />

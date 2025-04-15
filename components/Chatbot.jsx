@@ -8,20 +8,21 @@ import Logo from "../src/assets/star-inside-circle-svgrepo-com.svg";
 import {useAuth} from '../context/authContext.jsx'; 
 import { useParams } from 'react-router-dom'; // Import useParams
 
-const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
+const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentChatId, setCurrentChatId }) => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { user } = useAuth(); // Get user from AuthContext
-  const { userId: userIdFromUrl } = useParams(); // Get userId from URL
+  const { user } = useAuth(); 
+  const { userId: userIdFromUrl } = useParams();
 
   const userRef = useRef();
   const messagesEndRef = useRef();
   const chatContainerRef = useRef();
 
-  // Get the height of the input bar dynamically
   const inputBarRef = useRef(null);
   const [inputBarHeight, setInputBarHeight] = useState(0);
+
+
 
   // API URL - better to define as a constant or from environment
   const API_URL = "http://localhost:8000";
@@ -32,6 +33,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
     }
   }, []);
 
+
   useEffect(() => {
     const fetchChatHistory = async () => {
       try {
@@ -40,6 +42,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
         if (response.ok) {
           const history = await response.json();
           // Make sure all messages have timestamps
+          console.log("Chat history received:", history);
           const historyWithTimestamps = history.map(msg => ({
             ...msg,
             timestamp: msg.timestamp || new Date().toISOString()
@@ -50,6 +53,13 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
           console.error("Failed to fetch chat history:", response.status);
           setError("Failed to load chat history");
         }
+        if (history.length > 0 && history[0]?.chatId) {
+          setCurrentChatId(history[0].chatId);
+          localStorage.setItem('chatId', history[0].chatId);
+        } else if (history.length === 0) {
+          setCurrentChatId(null); // Or some default value
+          localStorage.removeItem('chatId');
+        }
       } catch (error) {
         console.error("Error fetching chat history:", error);
         setError("Error connecting to server");
@@ -59,7 +69,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
     };
 
     fetchChatHistory();
-  }, [setMessages, setShowWelcome, user?.id, userIdFromUrl, API_URL]); // Depend on user?.id and userIdFromUrl
+  }, [setMessages, setShowWelcome, user?.id, userIdFromUrl, API_URL, setCurrentChatId]); // Depend on user?.id and userIdFromUrl
 
   const sendMessage = async (messageContent) => {
     const userMessage = {
@@ -109,6 +119,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
     const headers = {
       "Content-Type": "application/json",
       'user-id': currentUserId,
+      'x-user-openai-key': localStorage.getItem('apiKeys') || '',
     };
     if (sessionIdFromStorage) {
       headers['session-id'] = sessionIdFromStorage;
@@ -118,21 +129,38 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
       const response = await fetch(`${API_URL}/api/v1/mother`, {
         method: "POST",
         headers: headers,
+        withCredentials: true,
         body: JSON.stringify({
           messages: [...messages.filter(m => !m.isLoading), userMessage]
         }),
       });
+      console.log("Messages being sent:", [...messages.filter(m => !m.isLoading), userMessage]);
 
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+      if (response.status === 429) {
+        setMessages(prev => [
+          ...prev.slice(0, -1),
+          {
+            role: "assistant",
+            content: data?.content || "You've hit the rate limit. Add your own API key by using the settings button or wait before trying again.",
+            timestamp: new Date().toISOString(),
+            isError: true
+          },
+        ]);
+        return;
       }
 
       const data = await response.json();
+      console.log("Data received:", data);
 
       // Store sessionId in localStorage if received and not already present
       if (data.sessionId && !sessionIdFromStorage) {
         localStorage.setItem('sessionId', data.sessionId);
         localStorage.setItem('sessionCreatedAt', new Date().toISOString());
+      }
+
+      if(data.chatId){
+        setCurrentChatId(data.chatId);
+        localStorage.setItem('chatId', data.chatId);
       }
 
       // Replace thinking message with real response
@@ -141,7 +169,8 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
           role: "assistant",
           content: data.reply,
           timestamp: new Date().toISOString(),
-          toolResults: data.toolResults
+          toolResults: data.toolResults,
+          chatId: data.chatId
         }];
         return newMessages;
       });
@@ -227,6 +256,12 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages }) => {
       </div>
     );
   };
+
+  useEffect(() => {
+    if (currentChatId) {
+      console.log("Current chat ID:", currentChatId);
+    }
+  }, [currentChatId]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 rounded-lg">

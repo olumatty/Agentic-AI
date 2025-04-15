@@ -20,7 +20,8 @@
     "react-router": "^7.5.0",
     "react-router-dom": "^7.5.0",
     "react-toastify": "^11.0.5",
-    "tailwindcss": "^4.1.1"
+    "tailwindcss": "^4.1.1",
+    "uuidv4": "^6.2.13"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
