@@ -1,20 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { BsPencilSquare } from "react-icons/bs";
+import { AiOutlineDelete } from "react-icons/ai";
 import Logo from "../src/assets/star-inside-circle-svgrepo-com.svg";
 import axios from 'axios';
-import { useAuth } from '../context/authContext.jsx'; // Assuming the path to your authContext
+import { useAuth } from '../context/authContext.jsx';
 
 const Sidebar = ({ startNewChat, iscollapsed, currentConversationId, onChatSelect }) => {
     const [chatHistory, setChatHistory] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const { user } = useAuth(); // Get the user object
+    const { user, getHeaders } = useAuth();
+    const API_URL = "http://localhost:8000";
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [conversationIdToDelete, setConversationIdToDelete] = useState(null);
 
     const fetchChatHistory = async () => {
         try {
             setIsLoading(true);
-            const userId = user?.id; // Get the user ID from your authentication context
+            const userId = user?.id;
             if (userId) {
-                const response = await axios.get(`http://localhost:8000/api/v1/chats/${userId}/history`, {
+                const response = await axios.get(`${API_URL}/api/v1/chats/${userId}/history`, {
                     withCredentials: true,
                     headers: {
                         'user-id': user?.id || '',
@@ -25,7 +29,7 @@ const Sidebar = ({ startNewChat, iscollapsed, currentConversationId, onChatSelec
                 console.log("Chat history received:", response.data);
             } else {
                 console.warn("User ID not available, cannot fetch chat history.");
-                setChatHistory([]); // Or handle this case as needed
+                setChatHistory([]);
             }
         } catch (error) {
             console.error("Error fetching chat history:", error);
@@ -34,30 +38,60 @@ const Sidebar = ({ startNewChat, iscollapsed, currentConversationId, onChatSelec
         }
     };
 
-    // Fetch on component mount
     useEffect(() => {
         fetchChatHistory();
     }, []);
 
-    // Also fetch when currentChatId changes (you might want to remove this if history should only load once)
-    // useEffect(() => {
-    //     if (currentConversationId) {
-    //         fetchChatHistory();
-    //     }
-    // }, [currentConversationId]);
-
-    const handleChatClick = (conversationId) => { // Changed from chatId to conversationId to match backend
+    const handleChatClick = (conversationId) => {
+        console.log("Clicked on conversation ID:", conversationId);
         onChatSelect(conversationId);
     };
 
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    const openDeleteModal = (conversationId) => {
+        setConversationIdToDelete(conversationId);
+        setIsDeleteModalOpen(true);
+    };
+
+    const closeDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+        setConversationIdToDelete(null);
+    };
+
+    const handleDeleteIndividualChat = async () => {
+        if (conversationIdToDelete) {
+            try {
+                const response = await fetch(`${API_URL}/api/v1/chats/${conversationIdToDelete}`, {
+                    method: 'DELETE',
+                    headers: getHeaders(false),
+                    credentials: 'include',
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log(data.message);
+                    setChatHistory(prevHistory =>
+                        prevHistory.filter(chat => chat.conversationId !== conversationIdToDelete)
+                    );
+                } else if (response.status === 404) {
+                    const errorData = await response.json();
+                    alert(errorData.message);
+                } else {
+                    const errorData = await response.json();
+                    console.error("Error deleting chat:", errorData.message);
+                    alert(`Error deleting chat: ${errorData.message}`);
+                }
+            } catch (error) {
+                console.error("Error deleting chat:", error);
+                alert("An error occurred while deleting the chat conversation.");
+            } finally {
+                closeDeleteModal(); // Close the modal after attempting deletion
+            }
+        }
     };
 
     return (
         iscollapsed && (
-            <div className="flex flex-col h-screen border-r border-gray-300 w-[20%] md:w-[15%] lg:w-[12%] min-w-[60px] bg-white">
+            <div className="flex flex-col h-screen border-r border-gray-300 w-[20%] md:w-[15%] lg:w-[12%] min-w-[60px] bg-white relative"> {/* Added relative for modal positioning */}
                 {/* Header */}
                 <div className="border-b border-gray-300 py-3.5 px-4 flex items-center justify-between">
                     <h1 className="text-[14px] font-medium text-gray-800 hidden md:block">Conversations</h1>
@@ -87,16 +121,23 @@ const Sidebar = ({ startNewChat, iscollapsed, currentConversationId, onChatSelec
                     ) : chatHistory.length > 0 ? (
                         chatHistory.map((chat) => (
                             <div
-                                key={chat.conversationId} // Use conversationId from backend
-                                className={`p-2 rounded cursor-pointer mb-2 text-gray-900 transition-all hover:shadow-md ${
+                                key={chat.conversationId}
+                                className={`p-2 rounded cursor-pointer mb-2 text-gray-900 transition-all hover:shadow-md flex items-center justify-between ${
                                     chat.conversationId === currentConversationId ? 'bg-blue-100 border border-blue-500' : 'bg-gray-100 hover:bg-gray-200'
                                 }`}
-                                onClick={() => handleChatClick(chat.conversationId)} // Pass conversationId
+                                onClick={() => handleChatClick(chat.conversationId)}
                             >
-                                <div className="truncate text-sm">{chat.title}</div> {/* Assuming your history returns a title */}
-                                <p className="text-xs text-gray-500 truncate hidden md:block">
-                                    {formatDate(chat.updatedAt)}
-                                </p>
+                                <div className="truncate text-sm">{chat.title}</div>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        openDeleteModal(chat.conversationId);
+                                    }}
+                                    className="focus:outline-none hover:text-red-500 text-gray-400"
+                                    title="Delete Chat"
+                                >
+                                    <AiOutlineDelete size={16} />
+                                </button>
                             </div>
                         ))
                     ) : (
@@ -110,6 +151,25 @@ const Sidebar = ({ startNewChat, iscollapsed, currentConversationId, onChatSelec
                     <img src={Logo} alt="Logo" className="w-5 h-5" />
                     <h1 className="font-medium text-[13px] text-gray-900 hidden md:block">Travel1.0</h1>
                 </button>
+
+                {/* Delete Confirmation Modal */}
+                {isDeleteModalOpen && (
+                    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-300'>
+                    <div className="bg-white w-[90%] sm:w-[35%] h-auto rounded-lg shadow-lg animate-fadeIn">
+                        <div className="flex items-center p-3 border-b flex-col">
+                            <p className="mb-4 text-gray-900 text-center">Are you sure you want to delete this chat conversation?</p>
+                            <div className="flex justify-end gap-4">
+                                <button onClick={closeDeleteModal} className="px-4 py-2 rounded-md text-gray-600 bg-gray-200 hover:bg-gray-300">
+                                    No
+                                </button>
+                                <button onClick={handleDeleteIndividualChat} className="px-4 py-2 rounded-md text-white bg-red-500 hover:bg-red-600">
+                                    Yes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                )}
             </div>
         )
     );

@@ -1,4 +1,3 @@
-// chatbot.jsx
 import { useEffect, useState, useRef } from "react";
 import React from "react";
 import { IoIosArrowRoundUp } from "react-icons/io";
@@ -74,8 +73,8 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
           if (response.ok) {
             const chatData = await response.json();
             console.log("Chat data loaded:", chatData);
-            // Fixed: Use messages instead of messges
-            setMessages(chatData.messages || []);
+            // Handle both spellings (messages or messges)
+            setMessages(chatData.messages || chatData.messges || []);
             setShowWelcome(false);
           } else {
             console.error("Failed to load chat:", response.status);
@@ -124,6 +123,12 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
       timestamp: new Date().toISOString()
     };
 
+    // Save the message content to a local variable
+    const contentToSend = messageContent.trim();
+    
+    // Clear input immediately for better UX
+    setInput("");
+    
     setMessages(prev => [...prev, userMessage]);
     setShowWelcome(false);
     setLoading(true);
@@ -142,7 +147,8 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
 
         const requestBody = {
           messages: [userMessage],
-          // Don't provide conversationId - let the backend generate one
+          // Add a title based on the first message content
+          title: contentToSend.substring(0, 50) + (contentToSend.length > 50 ? "..." : "")
         };
 
         const response = await fetch(`${API_URL}/api/v1/travel`, {
@@ -155,7 +161,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
 
         if (response.status === 429) {
           setMessages(prev => [
-            ...prev.slice(0, -1),
+            ...prev,
             {
               role: "assistant",
               content: "You've hit the rate limit. Please try again later.",
@@ -181,6 +187,10 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
             '', 
             `/chat/${data.conversationId}`
           );
+
+          // Trigger a refresh of the chat history in the sidebar
+          // You need to implement a function to call back to AgentPage to refresh the sidebar
+          // e.g. props.onChatCreated(data.conversationId);
         }
 
         // Add assistant response
@@ -194,7 +204,6 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
           }
         ]);
       } else if (currentConversationId) {
-        console.log("Conversation ID NOT received from backend in the response."); 
         // This is an existing conversation
         // Add a thinking message
         const thinkingMessage = {
@@ -203,6 +212,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
           timestamp: new Date().toISOString(),
           isLoading: true
         };
+        
         setMessages(prev => [...prev, thinkingMessage]);
 
         // Create headers with OpenAI key if present
@@ -235,6 +245,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
               isError: true
             },
           ]);
+          setLoading(false);
           return;
         }
 
@@ -266,9 +277,8 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
       setError(error.message);
     } finally {
       setLoading(false);
-      setInput("");
     }
-};
+  };
 
   const handleSend = async (e) => {
     e.preventDefault();

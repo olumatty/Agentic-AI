@@ -8,8 +8,17 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const axiosConfig = {
-        withCredentials: true, // needed if your JWT is in a cookie
+    // Function to get headers with potential token
+    const getHeaders = (isFormData = false) => {
+        const headers = {
+            'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
+        };
+        // You might need to adjust how you get your token here
+        const token = document.cookie.replace(/(?:(?:^|.*;\s*)token\s*=\s*([^;]*)(?:(?!;)|.*))/g, '$1');
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return headers;
     };
 
     useEffect(() => {
@@ -27,17 +36,17 @@ export const AuthProvider = ({ children }) => {
                 return;
             }
 
-            const res = await axios.get('http://localhost:8000/api/v1/auth/revalidate', axiosConfig);
+            const res = await axios.get('http://localhost:8000/api/v1/auth/revalidate', { withCredentials: true });
 
             if (res.status === 200 && res.data.userId === storedUserId) {
                 setUser({ id: storedUserId, email: storedEmail, username: storedUsername });
                 setIsAuthenticated(true);
             } else {
-                logout(); // if it doesn’t match, clear everything
+                logout();
             }
         } catch (error) {
             console.error("Revalidate failed:", error.response?.data || error.message);
-            logout(); // logout on failure
+            logout();
         } finally {
             setIsLoading(false);
         }
@@ -60,7 +69,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, user, login, logout, revalidate, isLoading }}>
+        <AuthContext.Provider value={{ isAuthenticated, user, login, logout, revalidate, isLoading, getHeaders }}> {/* Add getHeaders here */}
             {!isLoading && children}
             {isLoading && <div>Loading...</div>}
         </AuthContext.Provider>
