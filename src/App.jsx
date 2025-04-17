@@ -1,35 +1,35 @@
 import React from 'react'
-import {BrowserRouter as Router, Routes, Route} from "react-router-dom";
+import { Routes, Route, Navigate } from 'react-router-dom';
 import AgentPage from "../global/AgentPage";
 import SignIn from "../global/SignIn";
 import SignUp from "../global/SignUp";
-import Modal from '../components/modal';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Sidebar from '../components/sidebar';
-
-
-
-const routes = (
-  <Router>
-    <Routes>
-      <Route path="/chat/:chatId" element={<AgentPage />} />
-      <Route path="/" element={<AgentPage />} />
-      <Route path="/signin" element={<SignIn />} />
-      <Route path="/signup" element={<SignUp />} />
-      <Route path="/modal" element={<Modal />} />
-      <Route path='/sidebar' element={<Sidebar />} />
-    </Routes>
-  </Router>
-)
+import { useAuth } from '../context/authContext.jsx';
 
 const App = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div>
-      {routes}
+      <Routes>
+        {/* Chatbot page accessible with or without authentication */}
+        <Route path="/" element={<AgentPage />} />
+
+        {/* Specific chat conversations require authentication */}
+        <Route path="/chat/:conversationId" element={isAuthenticated ? <AgentPage /> : <Navigate to="/signin" />} />
+
+        {/* Sign-in and sign-up pages accessible only when not authenticated */}
+        <Route path="/signin" element={!isAuthenticated ? <SignIn /> : <Navigate to="/" />} />
+        <Route path="/signup" element={!isAuthenticated ? <SignUp /> : <Navigate to="/" />} />
+      </Routes>
       <ToastContainer position="bottom-right" />
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;

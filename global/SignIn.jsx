@@ -35,21 +35,16 @@ const SignIn = () => {
             },{
                 withCredentials: true,
             });
-        
-            if (response.status === 200 && response.data.userId && response.data.chatId) {
+            
+            if (response.status === 200 && response.data.userId) {
+                // Store only userId, username, and email
                 localStorage.setItem('userId', response.data.userId);
-                localStorage.setItem('chatId', response.data.chatId); // Store the chatId
-                login(response.data.userId);
+                localStorage.setItem('username', response.data.username);
+                localStorage.setItem('email', response.data.email);
+                
+                login(response.data); // Pass the entire user data object
                 console.log("Login successful:", response.data);
-                navigate(`/chat/${response.data.chatId}`); // Navigate to the /chat/:chatId route
-            } else if (response.status === 200 && response.data.userId) {
-                localStorage.setItem('userId', response.data.userId);
-                login(response.data.userId);
-                console.log("Login successful, no chatId in response (check backend):", response.data);
-                navigate(`/user/${response.data.userId}`); // Or a different user-specific route if needed
-            } else if (response.status === 200) {
-                console.log("Login successful, but no userId in response:", response.data);
-                navigate("/"); // Or some default route
+                navigate(`/`);
             }
         
         } catch (err) {

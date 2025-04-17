@@ -1,3 +1,4 @@
+// chatbot.jsx
 import { useEffect, useState, useRef } from "react";
 import React from "react";
 import { IoIosArrowRoundUp } from "react-icons/io";
@@ -5,27 +6,53 @@ import ReactMarkdown from "react-markdown";
 import Loading from "../components/Loading";
 import HomeUI from "./HomeUI";
 import Logo from "../src/assets/star-inside-circle-svgrepo-com.svg";
-import {useAuth} from '../context/authContext.jsx'; 
-import { useParams } from 'react-router-dom'; // Import useParams
+import { useAuth } from '../context/authContext.jsx';
+import { useParams } from 'react-router-dom';
 
-const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentChatId, setCurrentChatId }) => {
-  const [input, setInput] = useState("");
+
+const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentConversationId, setCurrentConversationId, input, setInput, isNewChat, setIsNewChat}) => {
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { user } = useAuth(); 
+  const { user } = useAuth();
   const { userId: userIdFromUrl } = useParams();
 
   const userRef = useRef();
   const messagesEndRef = useRef();
   const chatContainerRef = useRef();
-
   const inputBarRef = useRef(null);
   const [inputBarHeight, setInputBarHeight] = useState(0);
 
-
-
   // API URL - better to define as a constant or from environment
   const API_URL = "http://localhost:8000";
+
+  const getHeaders = (includeContentType = true) => {
+    const headers = {};
+    
+    // Add Content-Type if needed
+    if (includeContentType) {
+      headers['Content-Type'] = 'application/json';
+    }
+    
+    // Add authentication token consistently
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    // Add user identification (used by your backend)
+    if (user?.id || userIdFromUrl) {
+      headers['user-id'] = user?.id || userIdFromUrl || '';
+    }
+    
+    // Add session ID if available (used by some of your endpoints)
+    const sessionId = localStorage.getItem('sessionId');
+    if (sessionId) {
+      headers['session-id'] = sessionId;
+    }
+    
+    return headers;
+  };
 
   useEffect(() => {
     if (inputBarRef.current) {
@@ -33,45 +60,64 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCh
     }
   }, []);
 
-
   useEffect(() => {
-    const fetchChatHistory = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`${API_URL}/get-chat-history?userId=${user?.id || userIdFromUrl || ''}`); // Send userId for history
-        if (response.ok) {
-          const history = await response.json();
-          // Make sure all messages have timestamps
-          console.log("Chat history received:", history);
-          const historyWithTimestamps = history.map(msg => ({
-            ...msg,
-            timestamp: msg.timestamp || new Date().toISOString()
-          }));
-          setMessages(historyWithTimestamps);
-          setShowWelcome(historyWithTimestamps.length === 0);
-        } else {
-          console.error("Failed to fetch chat history:", response.status);
-          setError("Failed to load chat history");
+    const loadInitialChat = async () => {
+      if (currentConversationId) {
+        try {
+          setLoading(true);
+          // Consistent API endpoint format (/api/v1/chats/...)
+          const response = await fetch(`${API_URL}/api/v1/chats/${currentConversationId}`, {
+            credentials: 'include', // Important for cookies
+            headers: getHeaders(false)
+          });
+          
+          if (response.ok) {
+            const chatData = await response.json();
+            console.log("Chat data loaded:", chatData);
+            // Fixed: Use messages instead of messges
+            setMessages(chatData.messages || []);
+            setShowWelcome(false);
+          } else {
+            console.error("Failed to load chat:", response.status);
+            setError("Failed to load chat history");
+            setMessages([{
+              role: 'assistant',
+              content: 'Failed to load chat history.',
+              timestamp: new Date().toISOString()
+            }]);
+            setShowWelcome(false);
+          }
+        } catch (error) {
+          console.error("Error loading chat:", error);
+          setError("Error connecting to server");
+          setMessages([{
+            role: 'assistant',
+            content: 'Error connecting to server.',
+            timestamp: new Date().toISOString()
+          }]);
+          setShowWelcome(false);
+        } finally {
+          setLoading(false);
         }
-        if (history.length > 0 && history[0]?.chatId) {
-          setCurrentChatId(history[0].chatId);
-          localStorage.setItem('chatId', history[0].chatId);
-        } else if (history.length === 0) {
-          setCurrentChatId(null); // Or some default value
-          localStorage.removeItem('chatId');
-        }
-      } catch (error) {
-        console.error("Error fetching chat history:", error);
-        setError("Error connecting to server");
-      } finally {
-        setLoading(false);
       }
     };
 
-    fetchChatHistory();
-  }, [setMessages, setShowWelcome, user?.id, userIdFromUrl, API_URL, setCurrentChatId]); // Depend on user?.id and userIdFromUrl
+    loadInitialChat();
+  }, [currentConversationId, setMessages, setShowWelcome, user?.id, userIdFromUrl]);
+
+  useEffect(() => {
+    if (isNewChat) {
+      setMessages([]);
+      setInput("");
+      setShowWelcome(true);
+    }
+  }, [isNewChat, setMessages, setShowWelcome, setInput]);
 
   const sendMessage = async (messageContent) => {
+    if (!messageContent.trim()) {
+      return;
+    }
+
     const userMessage = {
       role: "user",
       content: messageContent,
@@ -82,136 +128,169 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCh
     setShowWelcome(false);
     setLoading(true);
 
-    // Show thinking message
-    const thinkingMessage = {
-      role: "assistant",
-      content: "Thinking...",
-      timestamp: new Date().toISOString(),
-      isLoading: true
-    };
-    setMessages(prev => [...prev, thinkingMessage]);
-
-    const currentUserId = user?.id || userIdFromUrl || '';
-    const sessionIdFromStorage = localStorage.getItem('sessionId');
-    let sessionCreatedAt = localStorage.getItem('sessionCreatedAt');
-
-    // Session expiration check
-    if (sessionCreatedAt) {
-      const sessionAge = (new Date() - new Date(sessionCreatedAt)) / 1000;
-      const sessionTimeout = 60 * 60; // 1 hour in seconds
-
-      if (sessionAge > sessionTimeout) {
-        console.error("Session has expired. Please refresh or start a new session.");
-        setMessages(prev => [
-          ...prev.slice(0, -1),
-          {
-            role: "assistant",
-            content: "Your session has expired. Please refresh and start a new session.",
-            timestamp: new Date().toISOString(),
-            isError: true
-          },
-        ]);
-        setLoading(false);
-        return; // Prevent message sending if the session is expired
-      }
-    }
-
-    const headers = {
-      "Content-Type": "application/json",
-      'user-id': currentUserId,
-      'x-user-openai-key': localStorage.getItem('apiKeys') || '',
-    };
-    if (sessionIdFromStorage) {
-      headers['session-id'] = sessionIdFromStorage;
-    }
-
     try {
-      const response = await fetch(`${API_URL}/api/v1/mother`, {
-        method: "POST",
-        headers: headers,
-        withCredentials: true,
-        body: JSON.stringify({
-          messages: [...messages.filter(m => !m.isLoading), userMessage]
-        }),
-      });
-      console.log("Messages being sent:", [...messages.filter(m => !m.isLoading), userMessage]);
+      // Create a new conversation if this is a new chat
+      if (isNewChat) {
+        console.log("Creating new conversation with first message");
+        
+        // Add the user's first message to travel API
+        const aiHeaders = getHeaders();
+        const apiKey = localStorage.getItem('apiKeys');
+        if (apiKey) {
+          aiHeaders['x-user-openai-key'] = apiKey;
+        }
 
-      if (response.status === 429) {
+        const requestBody = {
+          messages: [userMessage],
+          // Don't provide conversationId - let the backend generate one
+        };
+
+        const response = await fetch(`${API_URL}/api/v1/travel`, {
+          method: "POST",
+          headers: aiHeaders,
+          credentials: 'include',
+          body: JSON.stringify(requestBody),
+        });
+        console.log("Sending first message to /api/v1/travel", requestBody);
+
+        if (response.status === 429) {
+          setMessages(prev => [
+            ...prev.slice(0, -1),
+            {
+              role: "assistant",
+              content: "You've hit the rate limit. Please try again later.",
+              timestamp: new Date().toISOString(),
+              isError: true
+            },
+          ]);
+          setLoading(false);
+          return;
+        }
+
+        const data = await response.json();
+        console.log("Response from /api/v1/travel for new conversation:", data);
+
+        if (data.conversationId) {
+          // Update conversation ID and URL
+          setCurrentConversationId(data.conversationId);
+          setIsNewChat(false);
+          
+          // Update browser URL
+          window.history.replaceState(
+            null, 
+            '', 
+            `/chat/${data.conversationId}`
+          );
+        }
+
+        // Add assistant response
+        setMessages(prev => [
+          ...prev,
+          {
+            role: "assistant",
+            content: data.reply || "No response from AI.",
+            timestamp: new Date().toISOString(),
+            toolResults: data.toolResults
+          }
+        ]);
+      } else if (currentConversationId) {
+        console.log("Conversation ID NOT received from backend in the response."); 
+        // This is an existing conversation
+        // Add a thinking message
+        const thinkingMessage = {
+          role: "assistant",
+          content: "Thinking...",
+          timestamp: new Date().toISOString(),
+          isLoading: true
+        };
+        setMessages(prev => [...prev, thinkingMessage]);
+
+        // Create headers with OpenAI key if present
+        const aiHeaders = getHeaders();
+        const apiKey = localStorage.getItem('apiKeys');
+        if (apiKey) {
+          aiHeaders['x-user-openai-key'] = apiKey;
+        }
+
+        const requestBody = {
+          messages: [...messages.filter(m => !m.isLoading), userMessage],
+          conversationId: currentConversationId
+        };
+
+        const response = await fetch(`${API_URL}/api/v1/travel`, {
+          method: "POST",
+          headers: aiHeaders,
+          credentials: 'include',
+          body: JSON.stringify(requestBody),
+        });
+        console.log("Sending messages to /api/v1/travel", requestBody);
+
+        if (response.status === 429) {
+          setMessages(prev => [
+            ...prev.slice(0, -1),
+            {
+              role: "assistant",
+              content: "You've hit the rate limit. Please try again later.",
+              timestamp: new Date().toISOString(),
+              isError: true
+            },
+          ]);
+          return;
+        }
+
+        const data = await response.json();
+        console.log("Response from /api/v1/travel:", data);
+
+        // Replace thinking message with the AI's response
         setMessages(prev => [
           ...prev.slice(0, -1),
           {
             role: "assistant",
-            content: data?.content || "You've hit the rate limit. Add your own API key by using the settings button or wait before trying again.",
+            content: data.reply || "No response from AI.",
             timestamp: new Date().toISOString(),
-            isError: true
-          },
+            toolResults: data.toolResults
+          }
         ]);
-        return;
       }
-
-      const data = await response.json();
-      console.log("Data received:", data);
-
-      // Store sessionId in localStorage if received and not already present
-      if (data.sessionId && !sessionIdFromStorage) {
-        localStorage.setItem('sessionId', data.sessionId);
-        localStorage.setItem('sessionCreatedAt', new Date().toISOString());
-      }
-
-      if(data.chatId){
-        setCurrentChatId(data.chatId);
-        localStorage.setItem('chatId', data.chatId);
-      }
-
-      // Replace thinking message with real response
-      setMessages(prev => {
-        const newMessages = [...prev.slice(0, -1), {
-          role: "assistant",
-          content: data.reply,
-          timestamp: new Date().toISOString(),
-          toolResults: data.toolResults,
-          chatId: data.chatId
-        }];
-        return newMessages;
-      });
-
     } catch (error) {
-      console.error("Chat error:", error);
+      console.error("Error calling /api/v1/travel:", error);
       setMessages(prev => [
-        ...prev.slice(0, -1),
+        ...prev,
         {
           role: "assistant",
-          content: "Sorry, something went wrong. Please try again later.",
+          content: "Sorry, something went wrong with the AI. Please try again later.",
           timestamp: new Date().toISOString(),
           isError: true
-        },
+        }
       ]);
       setError(error.message);
     } finally {
       setLoading(false);
+      setInput("");
     }
-  };
+};
 
   const handleSend = async (e) => {
     e.preventDefault();
+    console.log("handleSend function triggered");
     if (input.trim() === "" || loading) return;
 
     const messageText = input.trim();
-    setInput("");
     await sendMessage(messageText);
   };
 
   const onCardClick = async (cardText) => {
     if (loading) return;
-    await sendMessage(cardText);
+    setInput(cardText); // Set the input to the card text
+    await sendMessage(cardText); // Optionally send the message immediately
   };
 
   const formatTime = (timestamp) => {
     if (!timestamp) return "";
-      return new Date(timestamp).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+    return new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   // Scroll to bottom when messages change
@@ -258,10 +337,10 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCh
   };
 
   useEffect(() => {
-    if (currentChatId) {
-      console.log("Current chat ID:", currentChatId);
+    if (currentConversationId) {
+      console.log("Current chat ID:", currentConversationId);
     }
-  }, [currentChatId]);
+  }, [currentConversationId]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 rounded-lg">
@@ -282,7 +361,6 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCh
           <div className="flex flex-col justify-center items-center flex-grow px-4 sm:px-6">
             <HomeUI onCardClick={onCardClick} />
           </div>
-
         ) : (
           <div className="flex flex-col flex-grow min-h-0 px-2 sm:px-4 md:px-10 lg:px-20">
             <div
@@ -290,13 +368,11 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCh
               className="flex-1 min-h-0 overflow-y-auto scroll-smooth w-full max-w-5xl mx-auto py-4 pr-2 pt-14"
               style={{ maxHeight: `calc(100vh - ${inputBarHeight}px - 32px)` }}
             >
-
               {messages.map((msg, index) => (
                 <div
                   key={index}
                   className={`py-2 px-2 flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
                 >
-
                   {msg.role === "user" ? (
                     <div ref={userRef} className="flex flex-col items-end -mr-2 max-w-[90%] mb-2">
                       <div className="bg-gray-900 text-white py-2 px-4 rounded-xl rounded-tr-none">
@@ -306,7 +382,6 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCh
                         {formatTime(msg.timestamp)}
                       </p>
                     </div>
-
                   ) : (
                     <div className="flex flex-row gap-2 sm:gap-3 max-w-[95%] mb-2">
                       <div className="mt-0 flex-shrink-0">
@@ -349,18 +424,18 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCh
               autoFocus
             />
             <button
-            type="submit"
-            className={`absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 py-2 px-2
-              text-white rounded-lg text-sm shadow outline-none transition-all duration-200 transform flex items-center justify-center
-              ${loading ? 'bg-gray-400 cursor-not-allowed' : input.trim() === ''
-                ? 'bg-sky-300 opacity-90 cursor-default scale-95'
-                : 'bg-sky-400 hover:bg-sky-500 hover:scale-105 opacity-100 scale-100'}`}
-            disabled={loading} 
-          >
-            <div className="flex items-center gap-1">
-              <IoIosArrowRoundUp className="w-7 h-7 font-bold" />
-            </div>
-          </button>
+              type="submit"
+              className={`absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 py-2 px-2
+                text-white rounded-lg text-sm shadow outline-none transition-all duration-200 transform flex items-center justify-center
+                ${loading ? 'bg-gray-400 cursor-not-allowed' : input.trim() === ''
+                  ? 'bg-sky-300 opacity-90 cursor-default scale-95'
+                  : 'bg-sky-400 hover:bg-sky-500 hover:scale-105 opacity-100 scale-100'}`}
+              disabled={loading}
+            >
+              <div className="flex items-center gap-1">
+                <IoIosArrowRoundUp className="w-7 h-7 font-bold" />
+              </div>
+            </button>
           </div>
         </form>
       </div>
