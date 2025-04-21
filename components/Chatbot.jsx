@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import React from "react";
 import { IoIosArrowRoundUp } from "react-icons/io";
 import ReactMarkdown from "react-markdown";
-import Loading from "../components/Loading";
+import Loading from "../components/Loading.jsx";
 import HomeUI from "./HomeUI";
 import Logo from "../src/assets/star-inside-circle-svgrepo-com.svg";
 import { useAuth } from '../context/authContext.jsx';
@@ -64,17 +64,15 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
       if (currentConversationId) {
         try {
           setLoading(true);
-          // Consistent API endpoint format (/api/v1/chats/...)
           const response = await fetch(`${API_URL}/api/v1/chats/${currentConversationId}`, {
-            credentials: 'include', // Important for cookies
+            credentials: 'include',
             headers: getHeaders(false)
           });
           
           if (response.ok) {
             const chatData = await response.json();
             console.log("Chat data loaded:", chatData);
-            // Handle both spellings (messages or messges)
-            setMessages(chatData.messages || chatData.messges || []);
+            setMessages(chatData.messages || []);
             setShowWelcome(false);
           } else {
             console.error("Failed to load chat:", response.status);
@@ -138,6 +136,16 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
       if (isNewChat) {
         console.log("Creating new conversation with first message");
         
+        // Add a thinking message immediately after user message
+        const thinkingMessage = {
+          role: "assistant",
+          content: "Thinking...",
+          timestamp: new Date().toISOString(),
+          isLoading: true
+        };
+        
+        setMessages(prev => [...prev, thinkingMessage]);
+        
         // Add the user's first message to travel API
         const aiHeaders = getHeaders();
         const apiKey = localStorage.getItem('apiKeys');
@@ -161,7 +169,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
 
         if (response.status === 429) {
           setMessages(prev => [
-            ...prev,
+            ...prev.slice(0, -1), // Remove the thinking message
             {
               role: "assistant",
               content: "You've hit the rate limit. Please try again later.",
@@ -193,9 +201,9 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
           // e.g. props.onChatCreated(data.conversationId);
         }
 
-        // Add assistant response
+        // Replace thinking message with assistant response
         setMessages(prev => [
-          ...prev,
+          ...prev.slice(0, -1), // Remove the thinking message
           {
             role: "assistant",
             content: data.reply || "No response from AI.",
@@ -237,7 +245,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
 
         if (response.status === 429) {
           setMessages(prev => [
-            ...prev.slice(0, -1),
+            ...prev.slice(0, -1), // Remove the thinking message
             {
               role: "assistant",
               content: "You've hit the rate limit. Please try again later.",
@@ -254,7 +262,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
 
         // Replace thinking message with the AI's response
         setMessages(prev => [
-          ...prev.slice(0, -1),
+          ...prev.slice(0, -1), // Remove the thinking message
           {
             role: "assistant",
             content: data.reply || "No response from AI.",
@@ -265,15 +273,19 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
       }
     } catch (error) {
       console.error("Error calling /api/v1/travel:", error);
-      setMessages(prev => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Sorry, something went wrong with the AI. Please try again later.",
-          timestamp: new Date().toISOString(),
-          isError: true
-        }
-      ]);
+      // Make sure to remove the thinking message before adding error message
+      setMessages(prev => {
+        const filteredMessages = prev.filter(msg => !msg.isLoading);
+        return [
+          ...filteredMessages,
+          {
+            role: "assistant",
+            content: "Sorry, something went wrong with the AI. Please try again later.",
+            timestamp: new Date().toISOString(),
+            isError: true
+          }
+        ];
+      });
       setError(error.message);
     } finally {
       setLoading(false);
@@ -320,7 +332,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
 
   // Render message content based on its type and state
   const renderMessageContent = (msg) => {
-    if (msg.isLoading || msg.content === "Thinking...") {
+    if (msg.isLoading) {
       return <Loading />;
     }
 
@@ -348,7 +360,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
 
   useEffect(() => {
     if (currentConversationId) {
-      console.log("Current chat ID:", currentConversationId);
+      console.log("Current Conversation ID: ", currentConversationId);
     }
   }, [currentConversationId]);
 

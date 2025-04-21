@@ -12,7 +12,7 @@ const AgentPage = () => {
     const [messages, setMessages] = useState([]);
     const [currentConversationId, setCurrentConversationId] = useState(null);
     const [isNewChat, setIsNewChat] = useState(true); // Start with true for initial page load
-    const [iscollapsed, setIsCollapsed] = useState(true);
+    const [iscollapsed, setIsCollapsed] = useState(false);
     const [input, setInput] = useState("");
     const { user } = useAuth();
     const { userId: userIdFromUrl, conversationId: urlConversationId } = useParams();

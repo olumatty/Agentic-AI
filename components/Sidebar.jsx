@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { BsPencilSquare } from "react-icons/bs";
-import { AiOutlineDelete } from "react-icons/ai";
+import { AiOutlinesDelete } from "react-icons/ai";
 import Logo from "../src/assets/star-inside-circle-svgrepo-com.svg";
 import axios from 'axios';
 import { useAuth } from '../context/authContext.jsx';
@@ -8,10 +8,11 @@ import { useAuth } from '../context/authContext.jsx';
 const Sidebar = ({ startNewChat, iscollapsed, currentConversationId, onChatSelect }) => {
     const [chatHistory, setChatHistory] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const { user, getHeaders } = useAuth();
-    const API_URL = "http://localhost:8000";
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [conversationIdToDelete, setConversationIdToDelete] = useState(null);
+    const { user, getHeaders } = useAuth();
+    const API_URL = "http://localhost:8000";
+    const modalRef = useRef(null);
 
     const fetchChatHistory = async () => {
         try {
@@ -41,6 +42,25 @@ const Sidebar = ({ startNewChat, iscollapsed, currentConversationId, onChatSelec
     useEffect(() => {
         fetchChatHistory();
     }, []);
+
+    // Handle clicks outside of the modal
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (isDeleteModalOpen && modalRef.current && !modalRef.current.contains(event.target)) {
+                closeDeleteModal();
+            }
+        }
+
+        // Add the event listener when modal is open
+        if (isDeleteModalOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        
+        // Clean up the event listener
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isDeleteModalOpen]);
 
     const handleChatClick = (conversationId) => {
         console.log("Clicked on conversation ID:", conversationId);
@@ -141,7 +161,7 @@ const Sidebar = ({ startNewChat, iscollapsed, currentConversationId, onChatSelec
                             </div>
                         ))
                     ) : (
-                        <div className="text-center py-4 text-gray-500">No chat history</div>
+                        <div className="text-center py-4 text-gray-500">No history</div>
                     )}
                 </div>
 
@@ -154,20 +174,25 @@ const Sidebar = ({ startNewChat, iscollapsed, currentConversationId, onChatSelec
 
                 {/* Delete Confirmation Modal */}
                 {isDeleteModalOpen && (
-                    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-300'>
-                    <div className="bg-white w-[90%] sm:w-[35%] h-auto rounded-lg shadow-lg animate-fadeIn">
-                        <div className="flex items-center p-3 border-b flex-col">
-                            <p className="mb-4 text-gray-900 text-center">Are you sure you want to delete this chat conversation?</p>
-                            <div className="flex justify-end gap-4">
-                                <button onClick={closeDeleteModal} className="px-4 py-2 rounded-md text-gray-600 bg-gray-200 hover:bg-gray-300">
-                                    No
-                                </button>
-                                <button onClick={handleDeleteIndividualChat} className="px-4 py-2 rounded-md text-white bg-red-500 hover:bg-red-600">
-                                    Yes
-                                </button>
+                    <div 
+                        className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-300'
+                    >
+                        <div 
+                            ref={modalRef}
+                            className="bg-white w-[90%] sm:w-[35%] h-auto rounded-lg shadow-lg animate-fadeIn"
+                        >
+                            <div className="flex items-center p-3 border-b flex-col">
+                                <p className="mb-4 text-gray-900 text-center">Are you sure you want to delete this chat conversation?</p>
+                                <div className="flex justify-end gap-4">
+                                    <button onClick={closeDeleteModal} className="px-4 py-2 rounded-md text-gray-600 bg-gray-200 hover:bg-gray-300">
+                                        No
+                                    </button>
+                                    <button onClick={handleDeleteIndividualChat} className="px-4 py-2 rounded-md text-white bg-red-500 hover:bg-red-600">
+                                        Yes
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
                     </div>
                 )}
             </div>

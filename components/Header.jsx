@@ -24,11 +24,10 @@ const Header = ({handlesidebarCollapse}) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
+    localStorage.removeItem('userId');
     localStorage.removeItem('token');
     localStorage.removeItem('sessionId');
-    localStorage.removeItem('chatId');
-    localStorage.removeItem('sessionCreatedAt');
+    localStorage.removeItem('conversation');
     logout();
     setIsMenuOpen(false);
   };

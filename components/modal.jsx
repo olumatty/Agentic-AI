@@ -60,8 +60,7 @@ const Modal = ({ onClose, setShowModal }) => {
                         <h1 className="text-[16px] font-semibold text-gray-800">Enter API key</h1>
                     </div>
                     <IoIosClose
-                        onClick={() => setShowModal(false)} // Use setShowModal directly
-                        size={30}
+                        onClick={() => setShowModal(false)}
                         className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
                     />
                 </div>
