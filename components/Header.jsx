@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from "react-router";
-import { IoIosMenu, IoIosClose} from "react-icons/io";
+import { IoIosMenu, IoIosClose } from "react-icons/io";
 import { IoSettingsOutline } from "react-icons/io5";
-import { GoSidebarExpand } from "react-icons/go";
+import { GoSidebarExpand, GoSidebarCollapse } from "react-icons/go";
 import { useAuth } from '../context/authContext.jsx';
 import Modal from './modal.jsx';
 
-const Header = ({handlesidebarCollapse}) => {
+const Header = ({  setIsCollapsed, iscollapsed }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const { isAuthenticated, logout } = useAuth();
@@ -32,6 +32,10 @@ const Header = ({handlesidebarCollapse}) => {
     setIsMenuOpen(false);
   };
 
+  const toggleSidebar = () => {
+    setIsCollapsed(!iscollapsed);
+  };
+
   // Close menu on outside click
   useEffect(() => {
     const handleClickOutsideMenu = (event) => {
@@ -50,10 +54,28 @@ const Header = ({handlesidebarCollapse}) => {
   }, [isMenuOpen]);
 
   return (
-    <div ref={menuRef}  className="flex px-4 py-2.5 items-center justify-between ">
+    <div className="flex px-4 py-2.5 items-center justify-between  border-gray-200">
       <div className="flex items-center gap-2">
-        <button className="flex items-center text-gray-900 py-2 px-3 rounded-xl">
-        <GoSidebarExpand onClick={handlesidebarCollapse} size={24} className='cursor-pointer'/>
+        {/* Mobile Hamburger Menu */}
+        <button 
+          onClick={toggleSidebar} 
+          className="md:hidden flex items-center text-gray-900 py-2 rounded-xl"
+          aria-label="Toggle sidebar"
+        >
+          <IoIosMenu size={24} className="cursor-pointer" />
+        </button>
+        
+        {/* Desktop Sidebar Toggle with dynamic icon */}
+        <button 
+          onClick={toggleSidebar}
+          className="hidden md:flex items-center text-gray-900 py-2 px-3 rounded-xl hover:bg-gray-100"
+          aria-label="Toggle sidebar"
+        >
+          {iscollapsed ? (
+            <GoSidebarCollapse size={24} className="cursor-pointer" title="Collapse sidebar" />
+          ) : (
+            <GoSidebarExpand size={24} className="cursor-pointer" title="Expand sidebar" />
+          )}
         </button>
       </div>
 
@@ -77,12 +99,16 @@ const Header = ({handlesidebarCollapse}) => {
             </div>
 
             {/* Dropdown menu (mobile) */}
-            <div className="relative block lg:hidden" ref={menuRef}>
+            <div className="relative block sm:hidden" ref={menuRef}>
               <button 
                 onClick={() => setIsMenuOpen(!isMenuOpen)} 
-                className="flex items-center border cursor-pointer focus:outline-none"
+                className="flex px-2 sm:px-4 py-2.5 items-center justify-between cursor-pointer focus:outline-none"
               >
-                <IoIosMenu className="w-6 h-6 text-gray-900" />
+                {isMenuOpen ? (
+                  <IoIosClose className="w-6 h-6 text-gray-900" />
+                ) : (
+                  <IoIosMenu className="w-6 h-6 text-gray-900" />
+                )}
               </button>
 
               {isMenuOpen && (
@@ -112,22 +138,19 @@ const Header = ({handlesidebarCollapse}) => {
         ) : (
           <div className='flex items-center gap-2'>
             <button 
-            onClick={handleLogout} 
-            className="flex items-center border cursor-pointer hover:bg-gray-200 border-gray-300 py-2 px-5 rounded-xl transition-colors"
-          >
-            <h1 className="font-medium text-[13px] text-center text-gray-900">Logout</h1>
-          </button>
-            <div>
-            <button  className="flex items-center  cursor-pointer  py-1.5 px-5 rounded-xl transition-colors">
-              <IoSettingsOutline size={24} onClick={() => setShowModal(!showModal)} className='text-gray-500 hover:text-gray-700 transition-colors' />
+              onClick={handleLogout} 
+              className="flex items-center border cursor-pointer hover:bg-gray-200 border-gray-300 py-2 px-5 rounded-xl transition-colors"
+            >
+              <h1 className="font-medium text-[13px] text-center text-gray-900">Logout</h1>
             </button>
-            {showModal && 
-            <Modal onClose={() => setShowModal(false)} 
-                setShowModal={setShowModal}
-
-             />}
+            <div>
+              <button className="flex items-center cursor-pointer py-1.5 px-5 rounded-xl transition-colors">
+                <IoSettingsOutline size={24} onClick={() => setShowModal(!showModal)} className='text-gray-500 hover:text-gray-700 transition-colors' />
+              </button>
+              {showModal && 
+                <Modal onClose={() => setShowModal(false)} setShowModal={setShowModal} />
+              }
             </div>
-
           </div>
         )}
       </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion as FramerMotion  } from "framer-motion"
 import { LuMessageCircle, LuPlane, LuHotel, } from "react-icons/lu";
-import Logo from "../src/assets/star-inside-circle-svgrepo-com.svg";
+import Logo from "../src/assets/star-inside-circle-svgrepo-com (1).svg"
 
 const HomeUI = ({ onCardClick }) => {
   const slideIn = {
@@ -27,7 +27,7 @@ const HomeUI = ({ onCardClick }) => {
   const typingSpeed = 50;
 
   return (
-    <div className="px-4 md:px-6">
+    <div className="px-0 sm:px-4 md:px-6">
     <FramerMotion.div
       initial="hidden"
       animate="visible"
@@ -90,7 +90,7 @@ const HomeUI = ({ onCardClick }) => {
           variants={buttonSlide}
           whileHover={{ scale: 1.05 }}
           onClick={() => onCardClick(onClickText)}
-          className="w-[80%] md:w-[232px] p-3 flex flex-col items-start justify-between rounded-[12px] bg-white border border-gray-200 cursor-pointer"
+          className="w-full max-w-[90%] md:max-w-[232px] p-3 flex flex-col items-start justify-between rounded-[12px] bg-white border border-gray-200 cursor-pointer"
         >
           <div className={`border-gray-100 border-2 flex py-1.5 px-2 rounded-lg`}style={{backgroundColor: color}} >
             {icon}

@@ -4,7 +4,7 @@ import { IoIosArrowRoundUp } from "react-icons/io";
 import ReactMarkdown from "react-markdown";
 import Loading from "../components/Loading.jsx";
 import HomeUI from "./HomeUI";
-import Logo from "../src/assets/star-inside-circle-svgrepo-com.svg";
+import Logo from "../src/assets/star-inside-circle-svgrepo-com (1).svg";
 import { useAuth } from '../context/authContext.jsx';
 import { useParams } from 'react-router-dom';
 
@@ -365,103 +365,103 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
   }, [currentConversationId]);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 rounded-lg">
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-          <span className="block sm:inline">{error}</span>
-          <button
-            className="absolute top-0 bottom-0 right-0 px-4 py-3"
-            onClick={() => setError(null)}
-          >
-            <span className="text-xl">&times;</span>
-          </button>
-        </div>
-      )}
-
-      <div className="flex-grow flex flex-col min-h-0">
-        {showWelcome ? (
-          <div className="flex flex-col justify-center items-center flex-grow px-4 sm:px-6">
-            <HomeUI onCardClick={onCardClick} />
-          </div>
-        ) : (
-          <div className="flex flex-col flex-grow min-h-0 px-2 sm:px-4 md:px-10 lg:px-20">
-            <div
-              ref={chatContainerRef}
-              className="flex-1 min-h-0 overflow-y-auto scroll-smooth w-full max-w-5xl mx-auto py-4 pr-2 pt-14"
-              style={{ maxHeight: `calc(100vh - ${inputBarHeight}px - 32px)` }}
-            >
-              {messages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`py-2 px-2 flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
-                >
-                  {msg.role === "user" ? (
-                    <div ref={userRef} className="flex flex-col items-end -mr-2 max-w-[90%] mb-2">
-                      <div className="bg-gray-900 text-white py-2 px-4 rounded-xl rounded-tr-none">
-                        <p className="whitespace-pre-line pr-2 text-sm sm:text-base">{msg.content}</p>
-                      </div>
-                      <p className="text-[10px] sm:text-xs text-gray-400 mr-1 mt-1">
-                        {formatTime(msg.timestamp)}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-row gap-2 sm:gap-3 max-w-[95%] mb-2">
-                      <div className="mt-0 flex-shrink-0">
-                        <div className="bg-white p-2 sm:p-3 rounded-full">
-                          <img src={Logo} alt="Logo" className="w-6 h-6 sm:w-7 sm:h-7" />
-                        </div>
-                      </div>
-                      <div className="flex flex-col">
-                        <div className={`bg-white p-2 rounded-xl rounded-tl-none shadow-sm ${msg.isError ? 'border border-red-300' : ''}`}>
-                          {renderMessageContent(msg)}
-                        </div>
-                        <p className="text-[10px] sm:text-xs text-gray-400 mt-1">
-                          {formatTime(msg.timestamp)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* INPUT BAR */}
-      <div ref={inputBarRef} className="w-full py-3 sticky bottom-0 bg-gray-100 z-10">
-        <form
-          className="px-2 sm:px-4 flex items-center rounded-lg w-full max-w-5xl mx-auto"
-          onSubmit={handleSend}
-        >
-          <div className="relative w-full">
-            <input
-              type="text"
-              className="w-full h-14 sm:h-16 pr-16 sm:pr-20 pl-3 sm:pl-6 bg-white text-gray-900 text-sm sm:text-base border border-gray-300 rounded-lg outline-none placeholder:text-xs sm:placeholder:text-sm"
-              placeholder="Send a message"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              disabled={loading}
-              autoFocus
-            />
-            <button
-              type="submit"
-              className={`absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 py-2 px-2
-                text-white rounded-lg text-sm shadow outline-none transition-all duration-200 transform flex items-center justify-center
-                ${loading ? 'bg-gray-400 cursor-not-allowed' : input.trim() === ''
-                  ? 'bg-sky-300 opacity-90 cursor-default scale-95'
-                  : 'bg-sky-400 hover:bg-sky-500 hover:scale-105 opacity-100 scale-100'}`}
-              disabled={loading}
-            >
-              <div className="flex items-center gap-1">
-                <IoIosArrowRoundUp className="w-7 h-7 font-bold" />
-              </div>
-            </button>
-          </div>
-        </form>
-      </div>
+    <div className="flex flex-col h-screen bg-gray-100 rounded-lg overflow-hidden">
+  {error && (
+    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 mx-2 sm:mx-4">
+      <span className="block sm:inline">{error}</span>
+      <button
+        className="absolute top-0 bottom-0 right-0 px-4 py-3"
+        onClick={() => setError(null)}
+      >
+        <span className="text-xl">&times;</span>
+      </button>
     </div>
+  )}
+
+  <div className="flex-grow flex flex-col min-h-0 px-4 sm:px-6 md:px-10 lg:px-20 overflow-hidden">
+    {showWelcome ? (
+      <div className="flex flex-col justify-center items-center flex-grow px-4 sm:px-6">
+        <HomeUI onCardClick={onCardClick} />
+      </div>
+    ) : (
+      <div className="flex flex-col flex-grow min-h-0 px-4 sm:px-6 md:px-10 lg:px-20">
+        <div
+          ref={chatContainerRef}
+          className="flex-1 min-h-0 overflow-y-auto scroll-smooth w-full max-w-full mx-auto py-4 pr-2 pt-14"
+          style={{ maxHeight: `calc(100vh - ${inputBarHeight}px - 32px)` }}
+        >
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`py-2 px-2 flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
+            >
+              {msg.role === "user" ? (
+                <div ref={userRef} className="flex flex-col items-end -mr-2 max-w-[90%] mb-2">
+                  <div className="bg-gray-900 text-white py-2 px-4 rounded-xl rounded-tr-none">
+                    <p className="whitespace-pre-line pr-2 text-sm sm:text-base break-words">{msg.content}</p>
+                  </div>
+                  <p className="text-[10px] sm:text-xs text-gray-400 mr-1 mt-1">
+                    {formatTime(msg.timestamp)}
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-row gap-2 sm:gap-3 max-w-[95%] mb-2">
+                  <div className="mt-0 flex-shrink-0">
+                    <div className="bg-white p-2 sm:p-3 rounded-full">
+                      <img src={Logo} alt="Logo" className="w-6 h-6 sm:w-7 sm:h-7" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col">
+                    <div className={`bg-white p-2 rounded-xl rounded-tl-none shadow-sm ${msg.isError ? 'border border-red-300' : ''}`}>
+                      {renderMessageContent(msg)}
+                    </div>
+                    <p className="text-[10px] sm:text-xs text-gray-400 mt-1">
+                      {formatTime(msg.timestamp)}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
+    )}
+  </div>
+
+  {/* INPUT BAR */}
+  <div ref={inputBarRef} className="w-full py-3 sticky bottom-0 bg-gray-100 z-10">
+    <form
+      className="px-4 sm:px-6 flex items-center rounded-lg w-full max-w-5xl mx-auto"
+      onSubmit={handleSend}
+    >
+      <div className="relative w-full">
+        <input
+          type="text"
+          className="w-full h-14 sm:h-16 pr-16 sm:pr-20 pl-3 sm:pl-6 bg-white text-gray-900 text-sm sm:text-base border border-gray-300 rounded-lg outline-none placeholder:text-xs sm:placeholder:text-sm"
+          placeholder="Send a message"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          disabled={loading}
+          autoFocus
+        />
+        <button
+          type="submit"
+          className={`absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 py-2 px-2
+            text-white rounded-lg text-sm shadow outline-none transition-all duration-200 transform flex items-center justify-center
+            ${loading ? 'bg-gray-400 cursor-not-allowed' : input.trim() === ''
+              ? 'bg-sky-300 opacity-90 cursor-default scale-95'
+              : 'bg-sky-400 hover:bg-sky-500 hover:scale-105 opacity-100 scale-100'}`}
+          disabled={loading}
+        >
+          <div className="flex items-center gap-1">
+            <IoIosArrowRoundUp className="w-7 h-7 font-bold" />
+          </div>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
   );
 };
 
