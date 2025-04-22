@@ -171,8 +171,8 @@ const Sidebar = ({ startNewChat, iscollapsed, setIsCollapsed, currentConversatio
                     md:max-w-[${iscollapsed ? '280px' : '0px'}]
                 `}
                 style={!isMobile ? {
-                    minWidth: iscollapsed ? '220px' : '0px',
-                    maxWidth: iscollapsed ? '280px' : '0px',
+                    minWidth: iscollapsed ? '200px' : '0px',
+                    maxWidth: iscollapsed ? '220px' : '0px',
                 } : {}}
             >
                 {/* Header */}
