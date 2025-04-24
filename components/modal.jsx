@@ -67,7 +67,7 @@ const Modal = ({ onClose, setShowModal }) => {
 
                 <div className='p-4 '>
                     <p className="text-[14px] p-2.5 text-gray-500 mb-4 bg-[#1d7efd10] rounded-lg">
-                        Enter your OpenAI API key below to continue using the assistant if you reach the default usage limit.
+                        Enter your Gemini API key below to continue using the assistant if you reach the default usage limit.
                         Your key will be stored locally in your browser and used only for this app.
                     </p>
 
