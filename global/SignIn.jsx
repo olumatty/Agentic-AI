@@ -16,31 +16,34 @@ const SignIn = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-
         if (!validateEmail(email)) {
             setError('Please enter a valid email address.');
             return;
         }
-
         if(!password) {
             setError('Please enter a password.');
             return;
         }
         setError('');
-
         try {
-            const response = await axios.post('http://localhost:8000/api/v1/auth/login', {
+            const response = await axios.post('https://travelai-server.onrender.com/api/v1/auth/login', {
                 email,
                 password
-            },{
+            }, {
                 withCredentials: true,
             });
             
             if (response.status === 200 && response.data.userId) {
-                // Store only userId, username, and email
+                // Store user data
                 localStorage.setItem('userId', response.data.userId);
                 localStorage.setItem('username', response.data.username);
                 localStorage.setItem('email', response.data.email);
+                
+                // If the backend is modified to send the token in the response
+                // Store the token as a fallback authentication method
+                if (response.data.token) {
+                    localStorage.setItem('authToken', response.data.token);
+                }
                 
                 login(response.data); // Pass the entire user data object
                 console.log("Login successful:", response.data);
@@ -49,7 +52,7 @@ const SignIn = () => {
         
         } catch (err) {
             if (err.response) {
-                if (err.response.status === 400) {
+                if (err.response.status === 400 || err.response.status === 401) {
                     setError("Invalid email or password.");
                 } else {
                     setError("An error occurred: " + (err.response.data.message || "Please try again later."));
@@ -61,16 +64,16 @@ const SignIn = () => {
         }        
     };
   return (
-    <div className='p-4 bg-white min-h-screen flex flex-col'> {/* Use min-h-screen and flex-col for full viewport height and stacking */}
-    <div className='flex items-center gap-2 mb-8'> {/* Added mb-8 for spacing below the logo */}
+    <div className='p-4 bg-white min-h-screen flex flex-col'> 
+    <div className='flex items-center gap-2 mb-8'> 
         <button className='flex items-center gap-1 border cursor-pointer border-gray-300 py-2 px-3 rounded-xl'>
             <img src={Logo} alt="Logo" className="w-5 h-5" />
             <h1 className='font-medium text-[13px] text-gray-900'>Travel1.0</h1>
         </button>
     </div>
 
-    <div className='flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8'> {/* Use flex-1 to take remaining vertical space and add responsive padding */}
-        <div className='w-full max-w-md bg-gray-100 p-6 sm:p-8 rounded-xl shadow-md border border-gray-100'> {/* Adjusted padding for smaller screens */}
+    <div className='flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8'>
+        <div className='w-full max-w-md bg-gray-100 p-6 sm:p-8 rounded-xl shadow-md border border-gray-100'> 
             <h1 className='text-2xl font-semibold text-gray-800 mb-6 text-center'>Log in</h1>
             <form onSubmit={handleLogin} className='space-y-4'>
                 <div>

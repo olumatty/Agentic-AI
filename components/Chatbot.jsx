@@ -115,182 +115,106 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
     if (!messageContent.trim()) {
       return;
     }
-
+  
     const userMessage = {
       role: "user",
-      content: messageContent,
-      timestamp: new Date().toISOString()
+      content: messageContent.trim(),
+      timestamp: new Date().toISOString(),
     };
-
-    // Save the message content to a local variable
-    const contentToSend = messageContent.trim();
-    
-    // Clear input immediately for better UX
-    setInput("");
-    
-    setMessages(prev => [...prev, userMessage]);
+  
+    setMessages((prev) => [...prev, userMessage]);
     setShowWelcome(false);
     setLoading(true);
-
+  
+    const thinkingMessage = {
+      role: "assistant",
+      content: "Thinking...",
+      timestamp: new Date().toISOString(),
+      isLoading: true,
+    };
+    setMessages((prev) => [...prev, thinkingMessage]);
+  
     try {
-      // Create a new conversation if this is a new chat
-      if (isNewChat) {
-        console.log("Creating new conversation with first message");
-        
-        // Add a thinking message immediately after user message
-        const thinkingMessage = {
-          role: "assistant",
-          content: "Thinking...",
-          timestamp: new Date().toISOString(),
-          isLoading: true
-        };
-        
-        setMessages(prev => [...prev, thinkingMessage]);
-        
-        // Add the user's first message to travel API
-        const aiHeaders = getHeaders();
-        const apiKey = localStorage.getItem('apiKeys');
-        if (apiKey) {
-          aiHeaders['X-User-Gemini-Key'] = apiKey;
-        }
-
-        const requestBody = {
-          messages: [userMessage],
-          // Add a title based on the first message content
-          title: contentToSend.substring(0, 50) + (contentToSend.length > 50 ? "..." : "")
-        };
-
-        const response = await fetch(`${API_URL}/api/v1/travel`, {
-          method: "POST",
-          headers: aiHeaders,
-          credentials: 'include',
-          body: JSON.stringify(requestBody),
-        });
-        console.log("Sending first message to /api/v1/travel", requestBody);
-
-        if (response.status === 429) {
-          setMessages(prev => [
-            ...prev.slice(0, -1), // Remove the thinking message
-            {
-              role: "assistant",
-              content: "You've hit the rate limit. Please try again later.",
-              timestamp: new Date().toISOString(),
-              isError: true
-            },
-          ]);
-          setLoading(false);
-          return;
-        }
-
-        const data = await response.json();
-        console.log("Response from /api/v1/travel for new conversation:", data);
-
-        if (data.conversationId) {
-          // Update conversation ID and URL
-          setCurrentConversationId(data.conversationId);
-          setIsNewChat(false);
-          
-          // Update browser URL
-          window.history.replaceState(
-            null, 
-            '', 
-            `/chat/${data.conversationId}`
-          );
-        }
-
-        // Replace thinking message with assistant response
-        setMessages(prev => [
-          ...prev.slice(0, -1), // Remove the thinking message
+      const aiHeaders = getHeaders();
+      const apiKey = localStorage.getItem("apiKeys");
+      if (apiKey) {
+        aiHeaders["X-User-Gemini-Key"] = apiKey;
+      }
+  
+      const requestBody = {
+        messages: [userMessage],
+        conversationId: isNewChat ? undefined : currentConversationId,
+        title: isNewChat ? userMessage.content.substring(0, 50) + (userMessage.content.length > 50 ? "..." : "") : undefined,
+      };
+  
+      const response = await fetch(`${API_URL}/api/v1/travel`, {
+        method: "POST",
+        headers: aiHeaders,
+        credentials: "include",
+        body: JSON.stringify(requestBody),
+      });
+  
+      console.log("Sending to /api/v1/travel:", requestBody);
+  
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error(`Backend API error: Status ${response.status}`, errorBody);
+        setMessages((prev) => [
+          ...prev.filter((msg) => !msg.isLoading),
           {
             role: "assistant",
-            content: data.reply || "No response from AI.",
+            content: `Error from backend: ${response.status} - ${errorBody.substring(0, 200)}`,
             timestamp: new Date().toISOString(),
-            toolResults: data.toolResults
-          }
+            isError: true,
+          },
         ]);
-      } else if (currentConversationId) {
-        // This is an existing conversation
-        // Add a thinking message
-        const thinkingMessage = {
-          role: "assistant",
-          content: "Thinking...",
-          timestamp: new Date().toISOString(),
-          isLoading: true
-        };
-        
-        setMessages(prev => [...prev, thinkingMessage]);
-
-        // Create headers with OpenAI key if present
-        const aiHeaders = getHeaders();
-        const apiKey = localStorage.getItem('apiKeys');
-        if (apiKey) {
-          aiHeaders['X-User-Gemini-Key'] = apiKey;
-        }
-
-        const requestBody = {
-          messages: [userMessage],
-          conversationId: currentConversationId
-        };
-
-        const response = await fetch(`${API_URL}/api/v1/travel`, {
-          method: "POST",
-          headers: aiHeaders,
-          credentials: 'include',
-          body: JSON.stringify(requestBody),
-        });
-        console.log("Sending messages to /api/v1/travel", requestBody);
-
-        if (response.status === 429) {
-          setMessages(prev => [
-            ...prev.slice(0, -1), // Remove the thinking message
-            {
-              role: "assistant",
-              content: "You've hit the rate limit. Please try again later.",
-              timestamp: new Date().toISOString(),
-              isError: true
-            },
-          ]);
-          setLoading(false);
-          return;
-        }
-
-        const data = await response.json();
-        console.log("Response from /api/v1/travel:", data);
-
-        // Replace thinking message with the AI's response
-        if(!currentConversationId & data.conversationId){
-          setCurrentConversationId(data.conversationId);
-          setIsNewChat(false);
-
-          // Update browser URL
-          window.history.replaceState(
-            null, 
-            '', 
-            `/chat/${data.conversationId}`
-          );
-        }
-        if(data.messages & Array.isArray(data.messages)){
-          setMessages(data.messages);
-        } else {
-          console.error("Backend response did not contain messages array");
-          setMessages(prev => prev.filter(msg => !msg.isLoading));
-        }
+        setError(`API Error: ${response.status}`);
+        return;
+      }
+  
+      const data = await response.json();
+      console.log("Response from /api/v1/travel:", data);
+  
+      // Handle conversationId for state management
+      if (data.conversationId && (isNewChat || !currentConversationId)) {
+        setCurrentConversationId(data.conversationId);
+        setIsNewChat(false);
+        window.history.replaceState(null, "", `/chat/${data.conversationId}`);
+      }
+  
+      // Use only data.reply for assistant response
+      if (data.reply) {
+        setMessages((prev) => [
+          ...prev.filter((msg) => !msg.isLoading),
+          {
+            role: "assistant",
+            content: data.reply,
+            timestamp: new Date().toISOString(),
+          },
+        ]);
+      } else {
+        console.error("Backend response did not contain reply:", data);
+        setMessages((prev) => [
+          ...prev.filter((msg) => !msg.isLoading),
+          {
+            role: "assistant",
+            content: "No response from AI.",
+            timestamp: new Date().toISOString(),
+            isError: true,
+          },
+        ]);
       }
     } catch (error) {
       console.error("Error calling /api/v1/travel:", error);
-      // Make sure to remove the thinking message before adding error message
-      setMessages(prev => {
-        const filteredMessages = prev.filter(msg => !msg.isLoading);
-        return [
-          ...filteredMessages,
-          {
-            role: "assistant",
-            content: "Sorry, something went wrong with the AI. Please try again later.",
-            timestamp: new Date().toISOString(),
-            isError: true
-          }
-        ];
-      });
+      setMessages((prev) => [
+        ...prev.filter((msg) => !msg.isLoading),
+        {
+          role: "assistant",
+          content: "Sorry, something went wrong. Please try again later.",
+          timestamp: new Date().toISOString(),
+          isError: true,
+        },
+      ]);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -304,12 +228,13 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
 
     const messageText = input.trim();
     await sendMessage(messageText);
+    setInput("");
   };
 
   const onCardClick = async (cardText) => {
     if (loading) return;
-    setInput(cardText); // Set the input to the card text
-    await sendMessage(cardText); // Optionally send the message immediately
+    await sendMessage(cardText); 
+    setInput("");
   };
 
   const formatTime = (timestamp) => {
@@ -335,51 +260,68 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
     return () => cancelAnimationFrame(animation);
   }, [messages]);
 
-  // Render message content based on its type and state
+
   const renderMessageContent = (msg) => {
+    console.log("Rendering message:", msg);
+  
     if (msg.isLoading) {
       return <Loading />;
     }
-
+  
     if (msg.isError) {
       return <div className="text-red-500">{msg.content}</div>;
     }
-
-    return (
-      <div className="text-gray-800 p-1 sm:p-2 prose prose-sm">
-        <ReactMarkdown components={{
-          // eslint-disable-next-line no-unused-vars
-          a: ({node, ...props}) => {
-            const {href, children, ...rest} = props;
-            return(
-              <a
-                href={href}
-                {...rest}
-                target="_blank"
-                onClick={(e) => 
-                  {
-                    e.preventDefault();
-                    if(href){
-                      window.open(href, '_blank');
-                
-                }}}
-                >{children}</a>
-            )
-          }
-        }}>{msg.content}</ReactMarkdown>
-
-        {msg.toolResults && (
-          <div className="mt-2 pt-2 border-t border-gray-200">
-            <p className="text-xs text-gray-500">Information sources used:</p>
-            <ul className="text-xs text-gray-500 mt-1">
-              {msg.toolResults.map((tool, idx) => (
-                <li key={idx}>{tool.agent}</li>
-              ))}
-            </ul>
+  
+    if (msg.role === "assistant" || msg.role === "model") {
+      // Sanitize content to remove trailing commas and ensure string
+      const safeContent = typeof msg.content === "string" ? msg.content.trim().replace(/,\s*$/, "") : String(msg.content || "").trim();
+  
+      try {
+        return (
+          <div className="text-gray-800 p-1 sm:p-2 prose prose-sm">
+            <ReactMarkdown
+              components={{
+                // eslint-disable-next-line no-unused-vars
+                ul: ({ node, ...props }) => <ul className="list-disc pl-4" {...props} />,
+                // eslint-disable-next-line no-unused-vars
+                li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+                // eslint-disable-next-line no-unused-vars
+                a: ({ node, href, children, ...props }) => (
+                  <a
+                    href={href}
+                    target="_blank"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (href) window.open(href, "_blank");
+                    }}
+                    className="text-blue-500 underline"
+                    {...props}
+                  >
+                    {children}
+                  </a>
+                ),
+              }}
+            >
+              {safeContent}
+            </ReactMarkdown>
           </div>
-        )}
-      </div>
-    );
+        );
+      } catch (error) {
+        console.error("Error rendering markdown for assistant message:", error, safeContent);
+        return (
+          <div className="text-gray-800 p-1 sm:p-2">
+            {safeContent}
+          </div>
+        );
+      }
+    }
+  
+    if (msg.role === "user") {
+      return null;
+    }
+  
+    console.warn("Frontend: Unexpected message role received by renderMessageContent:", msg.role, msg);
+    return <div className="text-gray-500 italic text-sm">Unexpected message type received.</div>;
   };
 
   useEffect(() => {
@@ -414,39 +356,57 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
           className="flex-1 min-h-0 overflow-y-auto scroll-smooth w-full max-w-full mx-auto py-4 pr-2 pt-14"
           style={{ maxHeight: `calc(100vh - ${inputBarHeight}px - 32px)` }}
         >
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`py-2 px-2 flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
-            >
-              {msg.role === "user" ? (
-                <div ref={userRef} className="flex flex-col items-end -mr-2 max-w-[90%] mb-2">
-                  <div className="bg-gray-900 text-white py-2 px-4 rounded-xl rounded-tr-none">
-                    <p className="whitespace-pre-line pr-2 text-sm sm:text-base break-words">{msg.content}</p>
-                  </div>
-                  <p className="text-[10px] sm:text-xs text-gray-400 mr-1 mt-1">
-                    {formatTime(msg.timestamp)}
-                  </p>
-                </div>
-              ) : (
-                <div className="flex flex-row gap-2 sm:gap-3 max-w-[95%] mb-2">
-                  <div className="mt-0 flex-shrink-0">
-                    <div className="bg-white p-2 sm:p-3 rounded-full">
-                      <img src={Logo} alt="Logo" className="w-6 h-6 sm:w-7 sm:h-7" />
+          {messages
+            .filter((msg) => {
+              if (msg.role === "function") {
+                try {
+                  const resultData = typeof msg.content === "string" && msg.content.length > 0 ? JSON.parse(msg.content) : msg.content;
+                  // Skip function messages with errors or pending status
+                  if (resultData.error || (resultData.message && typeof resultData.message === "string") || resultData.status === "pending") {
+                    console.log("Filtering out error/pending function message from render:", resultData);
+                    return false;
+                  }
+                  return true;
+                } catch (e) {
+                  console.error("Failed to parse function message content for filtering:", msg.content, e);
+                  return false; // Skip invalid function messages
+                }
+              }
+              return true; // Include all other messages
+            })
+            .map((msg, index) => (
+              <div
+                key={index}
+                className={`py-2 px-2 flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
+              >
+                {msg.role === "user" ? (
+                  <div ref={userRef} className="flex flex-col items-end -mr-2 max-w-[90%] mb-2">
+                    <div className="bg-gray-900 text-white py-2 px-4 rounded-xl rounded-tr-none">
+                      <p className="whitespace-pre-line pr-2 text-sm sm:text-base break-words">{msg.content}</p>
                     </div>
-                  </div>
-                  <div className="flex flex-col">
-                    <div className={`bg-white p-2 rounded-xl rounded-tl-none shadow-sm ${msg.isError ? 'border border-red-300' : ''}`}>
-                      {renderMessageContent(msg)}
-                    </div>
-                    <p className="text-[10px] sm:text-xs text-gray-400 mt-1">
+                    <p className="text-[10px] sm:text-xs text-gray-400 mr-1 mt-1">
                       {formatTime(msg.timestamp)}
                     </p>
                   </div>
-                </div>
-              )}
-            </div>
-          ))}
+                ) : (
+                  <div className="flex flex-row gap-2 sm:gap-3 max-w-[95%] mb-2">
+                    <div className="mt-0 flex-shrink-0">
+                      <div className="bg-white p-2 sm:p-3 rounded-full">
+                        <img src={Logo} alt="Logo" className="w-6 h-6 sm:w-7 sm:h-7" />
+                      </div>
+                    </div>
+                    <div className="flex flex-col">
+                      <div className={`bg-white p-2 rounded-xl rounded-tl-none shadow-sm ${msg.isError ? "border border-red-300" : ""}`}>
+                        {renderMessageContent(msg)}
+                      </div>
+                      <p className="text-[10px] sm:text-xs text-gray-400 mt-1">
+                        {formatTime(msg.timestamp)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           <div ref={messagesEndRef} />
         </div>
       </div>
