@@ -39,7 +39,7 @@ const SignUp = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post('http://localhost:8000/api/v1/auth/signup', {
+            const response = await axios.post('https://travelai-server.onrender.com/api/v1/auth/signup', {
                 username,
                 email,
                 password

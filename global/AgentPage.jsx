@@ -25,7 +25,7 @@ const AgentPage = () => {
             if (window.innerWidth >= 768) {
                 setIsCollapsed(false); 
             } else {
-                setIsCollapsed(true); // hide sidebar on mobile
+                setIsCollapsed(true); 
             }
         };
 
@@ -62,7 +62,7 @@ const AgentPage = () => {
         try {
             const token = localStorage.getItem('authToken') || '';
             
-            const response = await axios.get(`http://localhost:8000/api/v1/chats/${conversationId}`, {
+            const response = await axios.get(`https://travelai-server.onrender.com/api/v1/chats/${conversationId}`, {
                 withCredentials: true,
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -80,11 +80,11 @@ const AgentPage = () => {
         }
     };
     
-    // Check if we have a conversation ID in URL on initial load
     React.useEffect(() => {
         if (urlConversationId) {
             loadChat(urlConversationId);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [urlConversationId]);
 
     return (

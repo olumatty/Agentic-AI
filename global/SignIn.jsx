@@ -98,7 +98,7 @@ const SignIn = () => {
                 {error && <div className='text-red-500 text-sm font-medium'>{error}</div>}
                 <button
                     type='submit'
-                    className='w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 rounded-md transition duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1'
+                    className='w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 rounded-md transition duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1 cursor-pointer'
                 >
                     Log in
                 </button>

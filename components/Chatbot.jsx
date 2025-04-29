@@ -23,7 +23,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
   const [inputBarHeight, setInputBarHeight] = useState(0);
 
   // API URL - better to define as a constant or from environment
-  const API_URL = "http://localhost:8000";
+  const API_URL = "https://travelai-server.onrender.com";
 
   const getHeaders = (includeContentType = true) => {
     const headers = {};
@@ -100,6 +100,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
     };
 
     loadInitialChat();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentConversationId, setMessages, setShowWelcome, user?.id, userIdFromUrl]);
 
   useEffect(() => {
@@ -150,7 +151,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
         const aiHeaders = getHeaders();
         const apiKey = localStorage.getItem('apiKeys');
         if (apiKey) {
-          aiHeaders['x-user-openai-key'] = apiKey;
+          aiHeaders['X-User-Gemini-Key'] = apiKey;
         }
 
         const requestBody = {
@@ -195,10 +196,6 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
             '', 
             `/chat/${data.conversationId}`
           );
-
-          // Trigger a refresh of the chat history in the sidebar
-          // You need to implement a function to call back to AgentPage to refresh the sidebar
-          // e.g. props.onChatCreated(data.conversationId);
         }
 
         // Replace thinking message with assistant response
@@ -227,11 +224,11 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
         const aiHeaders = getHeaders();
         const apiKey = localStorage.getItem('apiKeys');
         if (apiKey) {
-          aiHeaders['x-user-openai-key'] = apiKey;
+          aiHeaders['X-User-Gemini-Key'] = apiKey;
         }
 
         const requestBody = {
-          messages: [...messages.filter(m => !m.isLoading), userMessage],
+          messages: [userMessage],
           conversationId: currentConversationId
         };
 
@@ -261,15 +258,23 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
         console.log("Response from /api/v1/travel:", data);
 
         // Replace thinking message with the AI's response
-        setMessages(prev => [
-          ...prev.slice(0, -1), // Remove the thinking message
-          {
-            role: "assistant",
-            content: data.reply || "No response from AI.",
-            timestamp: new Date().toISOString(),
-            toolResults: data.toolResults
-          }
-        ]);
+        if(!currentConversationId & data.conversationId){
+          setCurrentConversationId(data.conversationId);
+          setIsNewChat(false);
+
+          // Update browser URL
+          window.history.replaceState(
+            null, 
+            '', 
+            `/chat/${data.conversationId}`
+          );
+        }
+        if(data.messages & Array.isArray(data.messages)){
+          setMessages(data.messages);
+        } else {
+          console.error("Backend response did not contain messages array");
+          setMessages(prev => prev.filter(msg => !msg.isLoading));
+        }
       }
     } catch (error) {
       console.error("Error calling /api/v1/travel:", error);
@@ -342,7 +347,26 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
 
     return (
       <div className="text-gray-800 p-1 sm:p-2 prose prose-sm">
-        <ReactMarkdown>{msg.content}</ReactMarkdown>
+        <ReactMarkdown components={{
+          // eslint-disable-next-line no-unused-vars
+          a: ({node, ...props}) => {
+            const {href, children, ...rest} = props;
+            return(
+              <a
+                href={href}
+                {...rest}
+                target="_blank"
+                onClick={(e) => 
+                  {
+                    e.preventDefault();
+                    if(href){
+                      window.open(href, '_blank');
+                
+                }}}
+                >{children}</a>
+            )
+          }
+        }}>{msg.content}</ReactMarkdown>
 
         {msg.toolResults && (
           <div className="mt-2 pt-2 border-t border-gray-200">
@@ -378,7 +402,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
     </div>
   )}
 
-  <div className="flex-grow flex flex-col min-h-0 px-4 sm:px-6 md:px-10 lg:px-20 overflow-hidden">
+  <div className="flex-grow flex flex-col min-h-0 overflow-hidden">
     {showWelcome ? (
       <div className="flex flex-col justify-center items-center flex-grow px-4 sm:px-6">
         <HomeUI onCardClick={onCardClick} />

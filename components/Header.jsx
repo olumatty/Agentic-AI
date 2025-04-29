@@ -68,7 +68,7 @@ const Header = ({  setIsCollapsed, iscollapsed }) => {
         {/* Desktop Sidebar Toggle with dynamic icon */}
         <button 
           onClick={toggleSidebar}
-          className="hidden md:flex items-center text-gray-900 py-2 px-3 rounded-xl hover:bg-gray-100"
+          className="hidden md:flex items-center text-gray-900 py-2 px-3 rounded-xl cursor-pointer hover:bg-gray-100"
           aria-label="Toggle sidebar"
         >
           {iscollapsed ? (
@@ -141,7 +141,7 @@ const Header = ({  setIsCollapsed, iscollapsed }) => {
               onClick={handleLogout} 
               className="flex items-center border cursor-pointer hover:bg-gray-200 border-gray-300 py-2 px-5 rounded-xl transition-colors"
             >
-              <h1 className="font-medium text-[13px] text-center text-gray-900">Logout</h1>
+              <h1 className="font-medium text-[13px] cursor-pointer text-center text-gray-900">Logout</h1>
             </button>
             <div>
               <button className="flex items-center cursor-pointer py-1.5 px-5 rounded-xl transition-colors">

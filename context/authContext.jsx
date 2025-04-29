@@ -23,6 +23,7 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         revalidate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const revalidate = async () => {
@@ -36,7 +37,7 @@ export const AuthProvider = ({ children }) => {
                 return;
             }
 
-            const res = await axios.get('http://localhost:8000/api/v1/auth/revalidate', { withCredentials: true });
+            const res = await axios.get('https://travelai-server.onrender.com/api/v1/auth/revalidate', { withCredentials: true });
 
             if (res.status === 200 && res.data.userId === storedUserId) {
                 setUser({ id: storedUserId, email: storedEmail, username: storedUsername });
@@ -76,4 +77,5 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);

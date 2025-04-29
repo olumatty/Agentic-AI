@@ -14,7 +14,7 @@ const Sidebar = ({ startNewChat, iscollapsed, setIsCollapsed, currentConversatio
     const [isMobile, setIsMobile] = useState(false);
     
     const { user, getHeaders } = useAuth();
-    const API_URL = "http://localhost:8000";
+    const API_URL = "https://travelai-server.onrender.com";
     const modalRef = useRef(null);
     const sidebarRef = useRef(null);
 
@@ -59,6 +59,7 @@ const Sidebar = ({ startNewChat, iscollapsed, setIsCollapsed, currentConversatio
 
     useEffect(() => {
         fetchChatHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Handle clicks outside of sidebar on mobile to close it
