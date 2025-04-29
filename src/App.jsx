@@ -1,8 +1,8 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AgentPage from '../global/AgentPage.jsx';
-import SignIn from "../global/signIn.jsx";
-import SignUp from "../global/signUp.jsx";
+import SignIn from "../global/SignIn.jsx";
+import SignUp from "../global/SignUp.jsx";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from '../context/authContext.jsx';
