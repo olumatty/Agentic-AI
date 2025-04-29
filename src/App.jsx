@@ -1,7 +1,7 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom';
-import AgentPage from "../global/AgentPage";
-import SignIn from "../global/SignIn";
+import AgentPage from "../global/agentPage.jsx";
+import SignIn from "../global/signIn.jsx";
 import SignUp from "../global/SignUp";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';

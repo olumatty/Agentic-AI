@@ -1,9 +1,9 @@
 import React from 'react';
-import Chatbot from '../components/Chatbot';
-import Header from '../components/Header';
+import Chatbot from '../components/chatbot.jsx';
+import Header from '../components/header.jsx';
 import { useState, useEffect } from "react";
 import axios from 'axios';
-import Sidebar from '../components/sidebar';
+import Sidebar from '../components/sidebar.jsx';
 import { useAuth } from '../context/authContext.jsx';
 import { useParams, useNavigate } from 'react-router-dom';
 

@@ -1,7 +1,7 @@
 import React from 'react'
 import { useState } from 'react'
-import PasswordInput from '../components/PasswordInput'
-import { validateEmail } from '../util/Helper'
+import PasswordInput from '../components/PasswordInput.jsx'
+import { validateEmail } from '../util/Helper.jsx'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import Logo from "../src/assets/star-inside-circle-svgrepo-com (1).svg";
