@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { IoIosMenu, IoIosClose } from "react-icons/io";
 import { IoSettingsOutline } from "react-icons/io5";
 import { GoSidebarExpand, GoSidebarCollapse } from "react-icons/go";
-import { useAuth } from '../context/authContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import Modal from './Modal.jsx';
 
 const Header = ({  setIsCollapsed, iscollapsed }) => {
