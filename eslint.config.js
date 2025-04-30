@@ -30,4 +30,9 @@ export default [
       ],
     },
   },
+  {
+    "compilerOptions": {
+      "forceConsistentCasingInFileNames": true
+    }
+  }
 ]

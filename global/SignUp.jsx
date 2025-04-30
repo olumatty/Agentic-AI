@@ -4,7 +4,7 @@ import PasswordInput from '../components/PasswordInput'
 import { validateEmail } from '../util/Helper'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import Logo from "../src/assets/star-inside-circle-svgrepo-com (1).svg";
 
 

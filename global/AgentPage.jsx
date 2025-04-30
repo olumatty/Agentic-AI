@@ -3,9 +3,9 @@ import Chatbot from '../components/Chatbot.jsx';
 import Header from '../components/Header.jsx';
 import { useState, useEffect } from "react";
 import axios from 'axios';
-import Sidebar from '../components/sidebar.jsx';
 import { useAuth } from '../context/authContext.jsx';
 import { useParams, useNavigate } from 'react-router-dom';
+import Sidebar from '../components/Sidebar.jsx';
 
 const AgentPage = () => {
     const [showWelcome, setShowWelcome] = useState(true);

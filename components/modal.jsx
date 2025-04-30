@@ -21,6 +21,7 @@ const Modal = ({ onClose, setShowModal }) => {
       return () => {
         document.removeEventListener("mousedown", handleOutsideClick);
       };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [setShowModal]); // Dependency on setShowModal
 
     useEffect(() => {
