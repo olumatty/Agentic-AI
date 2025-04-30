@@ -117,53 +117,45 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
     }
   
     const userMessage = {
-      role: "user",
+      role: 'user',
       content: messageContent.trim(),
       timestamp: new Date().toISOString(),
     };
   
     setMessages((prev) => [...prev, userMessage]);
     setShowWelcome(false);
-    setLoading(true);
-  
-    const thinkingMessage = {
-      role: "assistant",
-      content: "Thinking...",
-      timestamp: new Date().toISOString(),
-      isLoading: true,
-    };
-    setMessages((prev) => [...prev, thinkingMessage]);
+    setLoading(true); // Trigger animation
   
     try {
       const aiHeaders = getHeaders();
-      const apiKey = localStorage.getItem("apiKeys");
+      const apiKey = localStorage.getItem('apiKeys');
       if (apiKey) {
-        aiHeaders["X-User-Gemini-Key"] = apiKey;
+        aiHeaders['X-User-Gemini-Key'] = apiKey;
       }
   
       const requestBody = {
         messages: [userMessage],
         conversationId: isNewChat ? undefined : currentConversationId,
-        title: isNewChat ? userMessage.content.substring(0, 50) + (userMessage.content.length > 50 ? "..." : "") : undefined,
+        title: isNewChat ? userMessage.content.substring(0, 50) + (userMessage.content.length > 50 ? '...' : '') : undefined,
       };
   
       const response = await fetch(`${API_URL}/api/v1/travel`, {
-        method: "POST",
+        method: 'POST',
         headers: aiHeaders,
-        credentials: "include",
+        credentials: 'include',
         body: JSON.stringify(requestBody),
       });
   
-      console.log("Sending to /api/v1/travel:", requestBody);
+      console.log('Sending to /api/v1/travel:', requestBody);
   
       if (!response.ok) {
         const errorBody = await response.text();
         console.error(`Backend API error: Status ${response.status}`, errorBody);
         setMessages((prev) => [
-          ...prev.filter((msg) => !msg.isLoading),
+          ...prev,
           {
-            role: "assistant",
-            content: `Error from backend: ${response.status} - ${errorBody.substring(0, 200)}`,
+            role: 'assistant',
+            content: `Error: ${response.status} - ${errorBody.substring(0, 200)}`,
             timestamp: new Date().toISOString(),
             isError: true,
           },
@@ -173,51 +165,49 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
       }
   
       const data = await response.json();
-      console.log("Response from /api/v1/travel:", data);
+      console.log('Response from /api/v1/travel:', data);
   
-      // Handle conversationId for state management
       if (data.conversationId && (isNewChat || !currentConversationId)) {
         setCurrentConversationId(data.conversationId);
         setIsNewChat(false);
-        window.history.replaceState(null, "", `/chat/${data.conversationId}`);
+        window.history.replaceState(null, '', `/chat/${data.conversationId}`);
       }
   
-      // Use only data.reply for assistant response
       if (data.reply) {
         setMessages((prev) => [
-          ...prev.filter((msg) => !msg.isLoading),
+          ...prev,
           {
-            role: "assistant",
+            role: 'assistant',
             content: data.reply,
             timestamp: new Date().toISOString(),
           },
         ]);
       } else {
-        console.error("Backend response did not contain reply:", data);
+        console.error('Backend response did not contain reply:', data);
         setMessages((prev) => [
-          ...prev.filter((msg) => !msg.isLoading),
+          ...prev,
           {
-            role: "assistant",
-            content: "No response from AI.",
+            role: 'assistant',
+            content: 'No response from AI.',
             timestamp: new Date().toISOString(),
             isError: true,
           },
         ]);
       }
     } catch (error) {
-      console.error("Error calling /api/v1/travel:", error);
+      console.error('Error calling /api/v1/travel:', error);
       setMessages((prev) => [
-        ...prev.filter((msg) => !msg.isLoading),
+        ...prev,
         {
-          role: "assistant",
-          content: "Sorry, something went wrong. Please try again later.",
+          role: 'assistant',
+          content: 'Sorry, something went wrong. Please try again later.',
           timestamp: new Date().toISOString(),
           isError: true,
         },
       ]);
       setError(error.message);
     } finally {
-      setLoading(false);
+      setLoading(false); // Stop animation
     }
   };
 
@@ -227,8 +217,9 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
     if (input.trim() === "" || loading) return;
 
     const messageText = input.trim();
-    await sendMessage(messageText);
     setInput("");
+    await sendMessage(messageText);
+    
   };
 
   const onCardClick = async (cardText) => {
@@ -260,9 +251,8 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
     return () => cancelAnimationFrame(animation);
   }, [messages]);
 
-
   const renderMessageContent = (msg) => {
-    console.log("Rendering message:", msg);
+    console.log('Rendering message:', msg);
   
     if (msg.isLoading) {
       return <Loading />;
@@ -272,56 +262,44 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
       return <div className="text-red-500">{msg.content}</div>;
     }
   
-    if (msg.role === "assistant" || msg.role === "model") {
-      // Sanitize content to remove trailing commas and ensure string
-      const safeContent = typeof msg.content === "string" ? msg.content.trim().replace(/,\s*$/, "") : String(msg.content || "").trim();
+    const effectiveRole = ['user', 'assistant', 'model'].includes(msg.role) ? msg.role : 'assistant';
+    if (effectiveRole !== msg.role) {
+      console.warn('Unrecognized message role, defaulting to assistant:', msg.role, msg);
+    }
   
-      try {
-        return (
-          <div className="text-gray-800 p-1 sm:p-2 prose prose-sm">
-            <ReactMarkdown
-              components={{
-                // eslint-disable-next-line no-unused-vars
-                ul: ({ node, ...props }) => <ul className="list-disc pl-4" {...props} />,
-                // eslint-disable-next-line no-unused-vars
-                li: ({ node, ...props }) => <li className="mb-1" {...props} />,
-                // eslint-disable-next-line no-unused-vars
-                a: ({ node, href, children, ...props }) => (
-                  <a
-                    href={href}
-                    target="_blank"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (href) window.open(href, "_blank");
-                    }}
-                    className="text-blue-500 underline"
-                    {...props}
-                  >
-                    {children}
-                  </a>
-                ),
-              }}
-            >
-              {safeContent}
-            </ReactMarkdown>
-          </div>
-        );
-      } catch (error) {
-        console.error("Error rendering markdown for assistant message:", error, safeContent);
-        return (
-          <div className="text-gray-800 p-1 sm:p-2">
+    const safeContent = typeof msg.content === 'string' ? msg.content.trim().replace(/,\s*$/, '') : String(msg.content || '').trim();
+  
+    try {
+      return (
+        <div className="text-gray-800 p-1 sm:p-2 prose prose-sm">
+          <ReactMarkdown
+            components={{
+              ul: ({ node, ...props }) => <ul className="list-disc pl-4" {...props} />,
+              li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+              a: ({ node, href, children, ...props }) => (
+                <a
+                  href={href}
+                  target="_blank"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (href) window.open(href, '_blank');
+                  }}
+                  className="text-blue-500 underline"
+                  {...props}
+                >
+                  {children}
+                </a>
+              ),
+            }}
+          >
             {safeContent}
-          </div>
-        );
-      }
+          </ReactMarkdown>
+        </div>
+      );
+    } catch (error) {
+      console.error('Error rendering markdown:', error, safeContent);
+      return <div className="text-gray-800 p-1 sm:p-2">{safeContent}</div>;
     }
-  
-    if (msg.role === "user") {
-      return null;
-    }
-  
-    console.warn("Frontend: Unexpected message role received by renderMessageContent:", msg.role, msg);
-    return <div className="text-gray-500 italic text-sm">Unexpected message type received.</div>;
   };
 
   useEffect(() => {
