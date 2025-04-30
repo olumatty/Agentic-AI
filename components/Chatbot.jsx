@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown";
 import Loading from "./Loading.jsx";
 import HomeUI from "./HomeUI.jsx";
 import Logo from "../src/assets/star-inside-circle-svgrepo-com (1).svg";
-import { useAuth } from '../context/authContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { useParams } from 'react-router-dom';
 
 
