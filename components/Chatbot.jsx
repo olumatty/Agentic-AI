@@ -124,7 +124,15 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
   
     setMessages((prev) => [...prev, userMessage]);
     setShowWelcome(false);
-    setLoading(true); // Trigger animation
+    setLoading(true); 
+
+    const thinkingMessage = {
+      role: "assistant",
+      content: "Thinking...",
+      timestamp: new Date().toISOString(),
+      isLoading: true,
+    };
+    setMessages((prev) => [...prev, thinkingMessage]);
   
     try {
       const aiHeaders = getHeaders();
@@ -152,7 +160,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
         const errorBody = await response.text();
         console.error(`Backend API error: Status ${response.status}`, errorBody);
         setMessages((prev) => [
-          ...prev,
+          ...prev.filter((msg) => !msg.isLoading),
           {
             role: 'assistant',
             content: `Error: ${response.status} - ${errorBody.substring(0, 200)}`,
@@ -175,7 +183,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
   
       if (data.reply) {
         setMessages((prev) => [
-          ...prev,
+          ...prev.filter((msg) => !msg.isLoading),
           {
             role: 'assistant',
             content: data.reply,
@@ -185,7 +193,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
       } else {
         console.error('Backend response did not contain reply:', data);
         setMessages((prev) => [
-          ...prev,
+          ...prev.filter((msg) => !msg.isLoading),
           {
             role: 'assistant',
             content: 'No response from AI.',
@@ -197,7 +205,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
     } catch (error) {
       console.error('Error calling /api/v1/travel:', error);
       setMessages((prev) => [
-        ...prev,
+        ...prev.filter((msg) => !msg.isLoading),
         {
           role: 'assistant',
           content: 'Sorry, something went wrong. Please try again later.',
@@ -251,24 +259,47 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
     return () => cancelAnimationFrame(animation);
   }, [messages]);
 
+
   const renderMessageContent = (msg) => {
     console.log('Rendering message:', msg);
-  
+
     if (msg.isLoading) {
       return <Loading />;
     }
-  
+
     if (msg.isError) {
       return <div className="text-red-500">{msg.content}</div>;
     }
-  
+
     const effectiveRole = ['user', 'assistant', 'model'].includes(msg.role) ? msg.role : 'assistant';
     if (effectiveRole !== msg.role) {
       console.warn('Unrecognized message role, defaulting to assistant:', msg.role, msg);
     }
-  
-    const safeContent = typeof msg.content === 'string' ? msg.content.trim().replace(/,\s*$/, '') : String(msg.content || '').trim();
-  
+
+    const safeContent = typeof msg.content === 'string' ? msg.content.trim() : '';
+
+    if (!safeContent) {
+       return null; 
+    }
+
+    let contentToRender = safeContent;
+    const parts = safeContent.split('\n\n'); 
+
+    
+    if (parts.length > 1) {
+        const firstPart = parts[0].trim();
+        try {
+            const jsonPart = JSON.parse(firstPart);
+            if (jsonPart && typeof jsonPart === 'object' && jsonPart.agent && jsonPart.extractedInfo) {
+                console.log("Detected and hiding raw tool output:", firstPart);
+                contentToRender = parts.slice(1).join('\n\n').trim();
+            } else {
+               contentToRender = safeContent;
+            }
+        } catch (e) {
+           contentToRender = safeContent; 
+        }
+    }
     try {
       return (
         <div className="text-gray-800 p-1 sm:p-2 prose prose-sm">
@@ -280,10 +311,7 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
                 <a
                   href={href}
                   target="_blank"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (href) window.open(href, '_blank');
-                  }}
+                  rel="noopener noreferrer" 
                   className="text-blue-500 underline"
                   {...props}
                 >
@@ -292,13 +320,13 @@ const Chatbot = ({ showWelcome, setShowWelcome, messages, setMessages, currentCo
               ),
             }}
           >
-            {safeContent}
+            {contentToRender} 
           </ReactMarkdown>
         </div>
       );
     } catch (error) {
-      console.error('Error rendering markdown:', error, safeContent);
-      return <div className="text-gray-800 p-1 sm:p-2">{safeContent}</div>;
+      console.error('Error rendering markdown:', error, contentToRender); 
+      return <div className="text-gray-800 p-1 sm:p-2">{contentToRender}</div>;
     }
   };
 
