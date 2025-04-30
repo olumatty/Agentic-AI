@@ -4,7 +4,7 @@ import Header from '../components/Header.jsx';
 import { useState, useEffect } from "react";
 import axios from 'axios';
 import Sidebar from '../components/sidebar.jsx';
-import { useAuth } from '../context/AuthContext.jsx';
+import { useAuth } from '../context/authContext.jsx';
 import { useParams, useNavigate } from 'react-router-dom';
 
 const AgentPage = () => {

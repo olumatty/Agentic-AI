@@ -5,7 +5,7 @@ import { validateEmail } from '../util/Helper.jsx'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import Logo from "../src/assets/star-inside-circle-svgrepo-com (1).svg";
-import { useAuth } from '../context/AuthContext.jsx';
+import { useAuth } from '../context/authContext.jsx';
 
 const SignIn = () => {
     const [email, setEmail] = useState('')

@@ -5,7 +5,7 @@ import SignIn from "../global/SignIn.jsx";
 import SignUp from "../global/SignUp.jsx";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useAuth } from '../context/AuthContext.jsx';
+import { useAuth } from '../context/authContext.jsx';
 
 const App = () => {
   const { isAuthenticated, isLoading } = useAuth();
